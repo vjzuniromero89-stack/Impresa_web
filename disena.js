@@ -159,7 +159,7 @@ function dibujarNombre(ancho=900){const {texto,numero,fuente,color,borde}=st.nom
   const d=x.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=0,y1=0;for(let yy=0;yy<c.height;yy++)for(let xx=0;xx<c.width;xx++)if(d[(yy*c.width+xx)*4+3]>20){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}
   const o=document.createElement('canvas'),cw=x1-x0+1,ch=y1-y0+1;o.width=ancho;o.height=Math.max(1,Math.round(ancho*ch/cw));o.getContext('2d').drawImage(c,x0,y0,cw,ch,0,0,o.width,o.height);return o}
 let tNom=0;
-async function actualizarNombre(girar=true){const n=st.nom;const raw=$('#nomTxt').value.trim();n.texto=(['Pacifico','Great Vibes'].includes(n.fuente)?raw:raw.toUpperCase()).replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .'-]/g,''); // cursivas en minúscula se leen mejorn.numero=$('#nomNum').value.replace(/\D/g,'').slice(0,2);n.borde=$('#nomBorde').checked;
+async function actualizarNombre(girar=true){const n=st.nom;const raw=$('#nomTxt').value.trim();n.texto=(['Pacifico','Great Vibes'].includes(n.fuente)?raw:raw.toUpperCase()).replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .'-]/g,'');/* cursivas en minúscula se leen mejor */n.numero=$('#nomNum').value.replace(/\D/g,'').slice(0,2);n.borde=$('#nomBorde').checked;
   $('#nomQuitar').hidden=!(n.texto||n.numero);if(!n.texto&&!n.numero){st.nombreImg=null;mostrarDiseno();calc();return}
   try{await document.fonts.load(`200px "${n.fuente}"`,n.texto+n.numero)}catch{}
   const cv=dibujarNombre(900),ratio=cv.height/cv.width,z=zonaDe(st.prenda,'espalda'),k=pct('espalda');
