@@ -28,7 +28,9 @@ function verGrande(lista,i=0){
     _vg.querySelector('figcaption b').textContent=it.titulo||'';_vg.querySelector('figcaption span').textContent=it.sub||'';
     _vg.classList.toggle('foto',!dis&&!it.oscuro&&it.oscuro!==undefined);_vg.querySelector('.vgFondo').hidden=!!dis||it.oscuro===false;
     a.hidden=!it.accion;if(it.accion){a.textContent=it.accion.texto;if(it.accion.href){a.href=it.accion.href;a.onclick=null}else{a.removeAttribute('href');a.onclick=()=>{_vg.close();it.accion.onclick()}}}
-    $$('.vgN').forEach(b=>b.hidden=lista.length<2)};
+    $$('.vgN').forEach(b=>b.hidden=lista.length<2||!!dis);
+    // viendo solo el diseño: sin botones de camisa ni de pedido (se cierra con la ×)
+    if(dis){bd.hidden=true;a.hidden=true;_vg.querySelector('figcaption span').textContent=''}};
   _vg._ir=d=>{i=(i+d+lista.length)%lista.length;pintar()};_vg._pintar=pintar;
   if(!_vg.open)_vg._dis=false;pintar();if(!_vg.open)_vg.showModal()}
 
@@ -58,7 +60,7 @@ updateCount();
 document.addEventListener('click',e=>{const b=e.target.closest('.cart');if(!b)return;const t=b.closest('article')?.querySelector('.tallaSel')?.value;
   if(addItem({nombre:b.dataset.name,detalle:(b.dataset.detail||'')+(t?` • talla ${t}`:''),qty:1,precio:+b.dataset.price,vista:b.dataset.foto||undefined}))$('#cartStatus').innerHTML=`Agregado a tu pedido${t?` (talla ${esc(t)})`:''}. <a href="pedido.html"><u>Ver mi pedido</u></a>`});
 const TALLAS_TIENDA=['XS','S','M','L','XL','2XL','3XL'];
-const disenosTienda=sbGet('disenos?select=codigo,nombre,categoria,preview_url,precio,color&activo=eq.true&order=orden,created_at');
+const disenosTienda=sbGet('disenos?select=codigo,nombre,categoria,preview_url,precio,color&activo=eq.true&en_tienda=eq.true&order=orden,created_at'); // interruptor «En la tienda» del panel
 const precioDe=d=>d.precio!=null&&d.precio!==''?+d.precio:(CFG.precios?.tienda??500);
 const colorTienda=d=>(typeof PRENDAS!=='undefined'&&PRENDAS.camiseta.colores.find(c=>c.nombre===d.color))||{nombre:'Negro',hex:'#151515'};
 const enlaceDe=(d,color)=>`disena.html?prenda=camiseta&color=${encodeURIComponent(color)}&lado=frente&diseno=${encodeURIComponent(d.preview_url)}&dn=${encodeURIComponent(d.codigo)}`;

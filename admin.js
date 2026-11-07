@@ -30,8 +30,8 @@ async function subir(file,carpeta){if(file.size>50*1024*1024)throw new Error('El
 const TABLAS={
   productos:{orden:'orden',foto:'foto_url',carpeta:'productos',vacio:{nombre:'',detalle:'',precio:0,foto_url:'',orden:99,activo:true},
     campos:[['nombre','Nombre','text',1],['detalle','Detalle (ej. Camiseta negra • DTF • diseño D007)','text'],['precio','Precio C$','number',1],['enlace','Enlace «Cambiar color» (opcional, empieza con disena.html?)','text'],['orden','Orden','number'],['activo','Visible en la web','check']]},
-  disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,precio:500,color:'Negro',orden:99,activo:true},
-    campos:[['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['precio','Precio en la tienda C$','number'],['color','Color de camiseta en la tienda (ej. Negro, Blanco, Rosado)','text'],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
+  disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{en_tienda:true,codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,precio:500,color:'Negro',orden:99,activo:true},
+    campos:[['en_tienda','En la tienda','switch'],['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['precio','Precio en la tienda C$','number'],['color','Color de camiseta en la tienda (ej. Negro, Blanco, Rosado)','text'],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   videos:{orden:'orden',foto:'portada_url',carpeta:'videos',vacio:{titulo:'',portada_url:'',video_url:'',orden:99,activo:true},
     campos:[['titulo','Título','text',1],['video_url','Video: enlace de YouTube o archivo','video'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   puntos_entrega:{orden:'orden',vacio:{nombre:'',direccion:'',referencia:'',horario:'12:00 m – 2:00 pm',lat:null,lng:null,orden:99,activo:true},
@@ -67,6 +67,11 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
       else{const n=document.createElement('span');n.className='msg err';n.textContent='Falta el archivo de impresión';fila2.append(n)}
       const fb=document.createElement('label');fb.className='fileBtn';fb.textContent=row.archivo?'Reemplazar archivo de impresión':'Subir archivo de impresión';const fi=document.createElement('input');fi.type='file';fi.accept='image/png,image/jpeg,image/webp,image/svg+xml,application/pdf';
       fi.onchange=()=>{nuevaImpresion=fi.files[0];if(nuevaImpresion)fb.firstChild.textContent=`Se subirá: ${nuevaImpresion.name} (${(nuevaImpresion.size/1e6).toFixed(1)} MB)`};fb.appendChild(fi);lb.append(t,fila2,fb)}
+    // interruptor «En la tienda»: verde = está en la tienda; se guarda al tocarlo
+    else if(tipo==='switch'){lb.className='ancho swRow';const b=document.createElement('button');b.type='button';b.className='swTienda';b.name=k;const m=document.createElement('span');m.className='msg';
+      const poner=v=>{b.setAttribute('aria-pressed',v);b.innerHTML=v?'<i></i> En la tienda':'<i></i> Agregar a la tienda';m.textContent=v&&row.activo===false?'(está oculto: marca «Visible en la web» para que salga)':''};poner(row[k]!==false);
+      b.onclick=async()=>{const v=b.getAttribute('aria-pressed')!=='true';poner(v);if(!row.id)return;b.disabled=true;const {error}=await sb.from(t).update({[k]:v}).eq('id',row.id);b.disabled=false;
+        if(error){poner(!v);m.className='msg err';m.textContent=error.message}else{row[k]=v;m.className='msg ok';m.textContent=v?'Ahora está en la tienda ✓':'Quitado de la tienda ✓'}};lb.append(b,m)}
     else if(tipo==='check'){lb.className='chk';const c=document.createElement('input');c.type='checkbox';c.name=k;c.checked=!!row[k];lb.append(c,label)}
     else if(tipo==='video'){lb.className='ancho';lb.append(label);const c=document.createElement('input');c.name=k;c.type='url';c.placeholder='https://youtu.be/… (o sube un archivo abajo)';c.value=row[k]||'';lb.append(c);
       const fb=document.createElement('label');fb.className='fileBtn';fb.textContent='Subir archivo de video (MP4, máx. 50 MB)';const fi=document.createElement('input');fi.type='file';fi.accept='video/mp4,video/webm,video/quicktime';fi.onchange=()=>{nuevoVideo=fi.files[0];if(nuevoVideo){c.value='';c.placeholder=`Se subirá: ${nuevoVideo.name}`}};fb.appendChild(fi);lb.append(fb)}
@@ -78,7 +83,7 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
   acc.append(msg);campos.appendChild(Object.assign(document.createElement('div'),{className:'ancho'}));campos.lastChild.appendChild(acc);
   el.append(izq,campos);
 
-  g.onclick=async()=>{const datos={};for(const [k,,tipo,req] of def.campos){if(tipo==='impresion')continue;const c=campos.querySelector(`[name=${k}]`);
+  g.onclick=async()=>{const datos={};for(const [k,,tipo,req] of def.campos){if(tipo==='impresion')continue;const c=campos.querySelector(`[name=${k}]`);if(tipo==='switch'){datos[k]=c.getAttribute('aria-pressed')==='true';continue}
       const v=tipo==='check'?c.checked:tipo==='number'?(c.value===''?null:+c.value):c.value.trim();
       if(req&&(v===''||v==null)){msg.className='msg err';msg.textContent=k==='lat'||k==='lng'?'Haz clic en el mapa para ubicar el punto.':'Completa los campos obligatorios.';c.focus?.();return}
       datos[k]=tipo==='text'||tipo==='video'?(v||(k==='video_url'||k==='enlace'?null:'')):v}
