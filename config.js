@@ -10,7 +10,7 @@ window.IMPRESA = {
     'Camiseta cuello redondo': { 'DTF': 350, 'Bordado': 420 },
     'Camisa Waffit (polo)': { 'Bordado': 600 },
     'Conjunto (camiseta + legging)': { 'DTF': 750 },
-    taza: 250, // taza blanca 11 oz de la tienda (muestra)
+    taza: 200, // taza blanca 11 oz de la tienda (muestra)
     segundoLado: 150, // se suma si lleva diseño adelante y atrás
     // de mayor a menor: a partir de N camisas se multiplica por factor
     descuentos: [{ desde: 24, factor: 0.82 }, { desde: 12, factor: 0.9 }]

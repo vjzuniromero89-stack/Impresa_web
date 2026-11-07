@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#061426">
+<title>Diseña tu taza | IMPRESA</title>
+<meta name="description" content="Elige un diseño y míralo en tu taza blanca de 11 oz. Diseños navideños y más de IMPRESA.">
+<link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="taza.css">
+</head>
+<body>
+<header><a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a><button id="menu" aria-label="Abrir menú">☰</button><nav id="nav"><a href="index.html">Inicio</a><a href="disena.html">Diseña tu camisa</a><a href="taza.html" aria-current="page">Diseña tu taza</a><a href="tienda.html">Tienda</a><a href="contacto.html">Contacto</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav></header>
+<main>
+<section class="pageHero"><p class="eyebrow">TAZAS PERSONALIZADAS</p><h1>Diseña tu taza</h1><p>Una taza blanca, el diseño que tú elijas. Lista para regalar.</p></section>
+<section class="tazaLayout">
+  <div class="tazaPreview"><canvas id="tazaCanvas" width="800" height="800" role="img" aria-label="Vista previa de una taza blanca de 11 oz"></canvas>
+    <div class="tazaVistas" role="group" aria-label="Vista de la impresión"><button type="button" data-offset="-7">Izquierda</button><button type="button" data-offset="0" aria-pressed="true">Centro</button><button type="button" data-offset="7">Derecha</button></div>
+    <p class="status">Vista ilustrativa. La impresión final se ajusta al área de la taza.</p>
+  </div>
+  <div class="tazaOpciones"><p class="eyebrow">TAZA BLANCA · 11 OZ</p><h2 id="tazaNombre">Elige tu diseño</h2><p>Área envolvente de 21 × 9,5 cm. Los diseños verticales se repiten a ambos lados sin deformarse.</p>
+    <label for="tazaBuscar">Buscar diseño</label><input id="tazaBuscar" type="search" placeholder="Navidad, Santa, reno, código…">
+    <div id="tazaCategorias" class="tazaCategorias" role="group" aria-label="Categorías de diseño"></div>
+    <p id="tazaEstado" role="status" aria-live="polite">Cargando diseños…</p><div id="tazaDisenos" class="tazaDisenos"></div>
+    <div class="tazaCompra"><label>Cantidad<input id="tazaCantidad" type="number" min="1" max="999" value="1" inputmode="numeric"></label><p><span id="tazaUnitario"></span><strong id="tazaTotal"></strong></p><button type="button" class="btn" id="tazaAgregar" disabled>Agregar a mi pedido</button></div>
+    <p id="tazaPedidoEstado" role="status" aria-live="polite"></p><a href="pedido.html">Ver mi pedido →</a>
+  </div>
+</section>
+</main>
+<footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer>
+<script src="config.js"></script><script src="app.js"></script><script src="camisas.js"></script><script src="taza.js"></script>
+</body></html>
