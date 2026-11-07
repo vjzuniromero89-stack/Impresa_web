@@ -3,7 +3,8 @@
 const stage=$('#stage');if(!stage)return;
 const TALLAS={adulto:['XS','S','M','L','XL','2XL','3XL'],nino:['2','4','6','8','10','12','14','16']};
 const qs=new URLSearchParams(location.search);
-const st={prenda:PRENDAS[qs.get('prenda')]?qs.get('prenda'):'camiseta',tec:'DTF',color:null,lado:'frente',lados:{frente:null,espalda:null}};
+const st={prenda:PRENDAS[qs.get('prenda')]?qs.get('prenda'):'camiseta',tec:'DTF',color:null,lado:qs.get('lado')==='espalda'?'espalda':'frente',lados:{frente:null,espalda:null}};
+$$('.ladoBtn').forEach(x=>x.classList.toggle('active',x.dataset.lado===st.lado));
 const P=()=>PRENDAS[st.prenda],Z=()=>P().zonas[st.lado];
 st.color=P().colores.find(c=>c.codigo&&c.codigo===qs.get('color')||c.nombre===qs.get('color'))||P().colores[0];
 const canvas=$('#shirt'),ctx=canvas.getContext('2d');
@@ -23,11 +24,15 @@ function maxCm(ratio,lado=st.lado){const z=P().zonas[lado];return Math.max(3,Mat
 function limitar(d,lado=st.lado){const z=P().zonas[lado];d.cm=Math.min(d.cm,maxCm(d.ratio,lado));const w=d.cm*PCT_CM,h=w*d.ratio;
   d.cx=Math.min(Math.max(d.cx,z.x+w/2),z.x+z.w-w/2);d.cy=Math.min(Math.max(d.cy,z.y+h/2),z.y+z.h-h/2)}
 
-$('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+$('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)usarArchivo(f)});
+// Diseño listo de la Galería (?diseno=…): solo archivos del propio sitio
+const disenoListo=qs.get('diseno');
+if(disenoListo&&/^assets\/disenos-anime\/[\w-]+\.png$/.test(disenoListo))fetch(disenoListo).then(r=>r.ok?r.blob():null).then(b=>b&&usarArchivo(new File([b],disenoListo.split('/').pop(),{type:'image/png'})));
+function usarArchivo(f){
   if(!/^image\/(png|jpeg|webp|svg\+xml)$/.test(f.type)){alert('Sube una imagen PNG, JPG, WEBP o SVG.');return}
   if(f.size>8e6){alert('La imagen pesa más de 8 MB. Prueba con una más liviana.');return}
   const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const ratio=img.naturalHeight/img.naturalWidth||1,z=Z();
-    const d={nombre:f.name,data:r.result,ratio,cm:Math.min(st.prenda==='waffit'&&st.lado==='frente'?10:25,maxCm(ratio)),cx:z.x+z.w/2,cy:z.y};d.cy=z.y+d.cm*PCT_CM*ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)});
+    const d={nombre:f.name,data:r.result,ratio,cm:Math.min(st.prenda==='waffit'&&st.lado==='frente'?10:25,maxCm(ratio)),cx:z.x+z.w/2,cy:z.y};d.cy=z.y+d.cm*PCT_CM*ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
 $('#cm').addEventListener('input',e=>{const d=st.lados[st.lado];if(!d)return;d.cm=+e.target.value;limitar(d);mostrarDiseno()});
 $('#centrar').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;d.cx=Z().x+Z().w/2;limitar(d);mostrarDiseno()});
 $('#quitar').addEventListener('click',()=>{st.lados[st.lado]=null;mostrarDiseno();calc()});

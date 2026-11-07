@@ -37,8 +37,9 @@ async function cargarPrenda(id){if(_cache[id])return _cache[id];const p=PRENDAS[
   return _cache[id]=out}
 
 // Pinta la camisa en un lienzo de 800×800 (sincrónico; cargarPrenda antes)
-function pintarCamisa(ctx,id,lado,hex,talla){const s=_cache[id]?.[lado];if(!s)return;const out=ctx.createImageData(800,800),o=out.data,[r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),lum=(0.299*r+0.587*g+0.114*b)/255,brillo=(1-lum)*70;
-  for(let k=0,i=0;k<640000;k++,i+=4){const v=Math.min(1.04,s.l[k]),h=brillo*Math.pow(v,8);o[i]=r*v+h;o[i+1]=g*v+h;o[i+2]=b*v+h;o[i+3]=s.a[k]}
+function pintarCamisa(ctx,id,lado,hex,talla){const s=_cache[id]?.[lado];if(!s)return;const out=ctx.createImageData(800,800),o=out.data,[r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),lum=(0.299*r+0.587*g+0.114*b)/255,brillo=(1-lum)*30;
+  // brillo suave en colores oscuros: con más, el negro se veía gris
+  for(let k=0,i=0;k<640000;k++,i+=4){const v=Math.min(1.04,s.l[k]),h=brillo*Math.pow(v,10);o[i]=r*v+h;o[i+1]=g*v+h;o[i+2]=b*v+h;o[i+3]=s.a[k]}
   ctx.putImageData(out,0,0);if(s.ribete)ctx.drawImage(s.ribete,0,0,800,800);
   if(lado==='frente')etiquetaKlasiko(ctx,PRENDAS[id].etiqueta,talla||'M')}
 
