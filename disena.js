@@ -3,12 +3,13 @@
 const stage=$('#stage');if(!stage)return;
 const TALLAS={adulto:['XS','S','M','L','XL','2XL','3XL'],nino:['2','4','6','8','10','12','14','16']};
 const qs=new URLSearchParams(location.search);
-const st={prenda:PRENDAS[qs.get('prenda')]?qs.get('prenda'):'camiseta',tec:'DTF',color:null,lado:['espalda','legging'].includes(qs.get('lado'))?qs.get('lado'):'frente',lados:{frente:null,espalda:null,legging:null},colorLeg:PRENDAS.legging.colores.find(c=>c.nombre===qs.get('leg'))||PRENDAS.legging.colores[0]};
+const st={prenda:PRENDAS[qs.get('prenda')]?qs.get('prenda'):'camiseta',tec:'DTF',color:null,lado:['espalda','legging'].includes(qs.get('lado'))?qs.get('lado'):'frente',lados:{frente:null,espalda:null,legging:null},colorLeg:null};
 $$('.ladoBtn').forEach(x=>x.classList.toggle('active',x.dataset.lado===st.lado));
 const P=()=>PRENDAS[st.prenda],Z=()=>zonaDe(st.prenda,st.lado),esConjunto=()=>st.prenda==='conjunto';
 const LADOS=()=>esConjunto()?['frente','espalda','legging']:['frente','espalda'];
 const colorDe=l=>esConjunto()&&l==='legging'?st.colorLeg:st.color;
 st.color=P().colores.find(c=>c.codigo&&c.codigo===qs.get('color')||c.nombre===qs.get('color'))||P().colores[0];
+st.colorLeg=PRENDAS.legging.colores.find(c=>c.nombre===qs.get('leg'))||PRENDAS.legging.colores.find(c=>c.nombre==='Negro');
 const canvas=$('#shirt'),ctx=canvas.getContext('2d');
 const talla=()=>$$('.qty').find(q=>+q.value>0)?.dataset.talla||'M';
 const pintar=()=>pintarCamisa(ctx,st.prenda,st.lado,colorDe(st.lado==='legging'?'frente':st.lado).hex,talla(),st.colorLeg.hex);

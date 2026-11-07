@@ -29,8 +29,7 @@ const PRENDAS={
   // pieza del conjunto (no se vende sola en el diseñador)
   legging:{
     nombre:'Legging',corto:'Legging',
-    // shortcut: colores de muestra; cambiar por los que consiga IMPRESA
-    colores:[['Negro','#151515'],['Gris oscuro','#55575b'],['Azul marino','#1d2340'],['Vino','#6a1b2b'],['Café','#4a3326'],['Verde botella','#1e3b2b'],['Rosado','#f3c0d6',1],['Beige','#e3d3bd',1],['Blanco','#ffffff',1]]
+    colores:[] // los mismos 17 de la camiseta (cliente, 2026-11-07)
   },
   // Conjunto = camiseta + legging, se eligen juntos (cliente, 2026-11-07)
   // modelo con camiseta (arriba) y legging (abajo): una foto, dos telas que se tiñen por separado
@@ -49,7 +48,7 @@ const PRENDAS={
     colores:[]
   }
 };
-PRENDAS.conjunto.colores=PRENDAS.camiseta.colores;
+PRENDAS.conjunto.colores=PRENDAS.legging.colores=PRENDAS.camiseta.colores;
 for(const p of Object.values(PRENDAS))if(p.colores.length&&Array.isArray(p.colores[0]))p.colores=p.colores.map(([nombre,hex,claro,codigo])=>({nombre,hex,claro:!!claro,codigo:codigo||''}));
 const PCT_CM=100*8.1/800;
 
