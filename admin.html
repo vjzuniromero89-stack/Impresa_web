@@ -17,6 +17,8 @@
 .fila{display:grid;grid-template-columns:120px 1fr;gap:16px;background:#0b2037;border:1px solid #1d4d77;border-radius:14px;padding:14px;margin-bottom:12px}
 .fila.nueva{border-color:#29a8ff}
 .fila.inactiva{opacity:.6}
+.fila[hidden]{display:none}
+.buscarDis{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:18px}.buscarDis input{flex:1;margin:0;font-size:15px}.buscarDis .msg{font-size:13px;white-space:nowrap}
 .thumb{width:120px;height:120px;border-radius:10px;object-fit:cover;background:#07182a;display:block}
 .campos{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:end}
 .campos label{font-size:12px}
@@ -58,7 +60,7 @@
 
   <div id="panel" hidden>
     <nav class="tabsA" aria-label="Secciones"><button data-tab="disenos" class="on">Diseños (tienda)</button><button data-tab="videos">Videos</button><button data-tab="puntos">Puntos de entrega</button><button data-tab="pedidos">Pedidos</button></nav>
-        <section data-sec="disenos"><div class="top"><h2>Diseños listos</h2><button class="btn" data-nuevo="disenos">+ Agregar diseño</button></div><p class="msg">La <b>vista</b> es la imagen que ven los clientes (PNG sin fondo, unos 1000 px). El <b>archivo de impresión</b> es el de alta calidad para la máquina (PNG sin fondo, 300 DPI, unos 3500 px de ancho); solo lo ven los administradores.</p><div id="lista-disenos"></div></section>
+        <section data-sec="disenos"><div class="top"><h2>Diseños listos</h2><button class="btn" data-nuevo="disenos">+ Agregar diseño</button></div><p class="msg">La <b>vista</b> es la imagen que ven los clientes (PNG sin fondo, unos 1000 px). El <b>archivo de impresión</b> es el de alta calidad para la máquina (PNG sin fondo, 300 DPI, unos 3500 px de ancho); solo lo ven los administradores.</p><label class="buscarDis">🔍 <input type="search" id="buscarDis" placeholder="Buscar por código, nombre o categoría (ej. D012, oso, Navidad)" aria-label="Buscar diseños"><span id="buscarCuenta" class="msg"></span></label><div id="lista-disenos"></div></section>
     <section data-sec="videos" hidden><div class="top"><h2>Videos del proceso</h2><button class="btn" data-nuevo="videos">+ Agregar video</button></div><p class="msg">Los 4 primeros (por orden) salen en la portada; todos salen en Nosotros. El video puede ser un archivo MP4 de hasta 50 MB o un enlace de YouTube.</p><div id="lista-videos"></div></section>
     <section data-sec="puntos" hidden><div class="top"><h2>Puntos de entrega</h2><button class="btn" data-nuevo="puntos">+ Agregar punto</button></div><p class="msg">Haz clic en el mapa para ubicar el punto que estás editando, o arrastra su marcador.</p><div id="mapaAdm"></div><div id="lista-puntos"></div></section>
     <section data-sec="pedidos" hidden><div class="top"><h2>Pedidos y mensajes</h2><button class="btn ghost" id="recargarPed">Actualizar</button></div><div id="lista-pedidos"></div></section>

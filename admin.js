@@ -43,13 +43,19 @@ async function descargarImpresion(ruta,btn){const t=btn.textContent;btn.textCont
   const {data,error}=await sb.storage.from('impresion').createSignedUrl(ruta,600,{download:true});btn.textContent=t;
   if(error){alert('No se pudo descargar: '+error.message);return}location.href=data.signedUrl}
 const tabla=t=>t==='puntos'?'puntos_entrega':t;
+// Buscar en Diseños: código, nombre o categoría, sin importar tildes ni mayúsculas (los nuevos sin guardar siempre se ven)
+const sinTilde=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function filtrarDisenos(){const q=sinTilde($('#buscarDis').value.trim());let n=0;
+  $$('#lista-disenos .fila').forEach(f=>{const v=sinTilde(['codigo','nombre','categoria'].map(k=>f.querySelector(`[name=${k}]`)?.value||'').join(' '));f.hidden=!!q&&!f.classList.contains('nueva')&&!v.includes(q);if(!f.hidden)n++});
+  $('#buscarCuenta').textContent=q?`${n} encontrado${n===1?'':'s'}`:''}
+$('#buscarDis').addEventListener('input',filtrarDisenos);
 let filasPuntos=[];
 
 async function cargar(tab){if(tab==='pedidos')return pedidos();const t=tabla(tab),def=TABLAS[t];
   const {data,error}=await sb.from(t).select('*').order(def.orden).order('created_at');
   const box=$(caja[t]);if(error){box.innerHTML=`<p class="msg err">No se pudo cargar: ${error.message}</p>`;return}
   box.innerHTML='';if(t==='puntos_entrega'){filasPuntos=[];mapa()}
-  data.forEach((row,i)=>box.appendChild(fila(t,row,i)));
+  data.forEach((row,i)=>box.appendChild(fila(t,row,i)));if(t==='disenos')filtrarDisenos();
   if(!data.length)box.innerHTML='<p class="msg">Todavía no hay nada aquí. Usa el botón de arriba para agregar.</p>';
   if(t==='puntos_entrega')ajustarMapa()}
 $$('[data-nuevo]').forEach(b=>b.addEventListener('click',()=>{const t=tabla(b.dataset.nuevo),box=$(caja[t]);box.querySelector('.msg')?.remove();const el=fila(t,{...TABLAS[t].vacio},null);box.prepend(el);el.scrollIntoView({behavior:'smooth',block:'center'});el.querySelector('input:not([type=file])')?.focus();if(t==='puntos_entrega')activar(el._punto)}));
