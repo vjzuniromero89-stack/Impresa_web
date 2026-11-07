@@ -165,7 +165,7 @@ async function actualizarNombre(girar=true){const n=st.nom;const raw=$('#nomTxt'
   const cv=dibujarNombre(900),ratio=cv.height/cv.width,z=zonaDe(st.prenda,'espalda'),k=pct('espalda');
   // alto ≈ 7 cm por la línea del nombre (+12 cm si lleva número), sin pasar el ancho de la zona ni 28 cm
   const altoCm=(n.texto?7:0)+(n.numero?12:0),cm=Math.max(6,Math.min(28,Math.floor(z.w/k),Math.round(altoCm/ratio)));
-  st.nombreImg={data:cv.toDataURL('image/png'),ratio,cm,cx:z.x+z.w/2,cy:z.y+cm*k*ratio/2+1};
+  st.nombreImg={data:cv.toDataURL('image/png'),ratio,cm,cx:z.x+z.w/2,cy:(z.nombreY??z.y+1)+cm*k*ratio/2}; // nombreY: debajo del pelo en la modelo
   if(girar&&st.lado!=='espalda')$('.ladoBtn[data-lado=espalda]').click();mostrarDiseno();calc()}
 const nomCambio=()=>{clearTimeout(tNom);tNom=setTimeout(actualizarNombre,180)};
 ['nomTxt','nomNum'].forEach(id=>$('#'+id).addEventListener('input',nomCambio));$('#nomBorde').addEventListener('change',()=>actualizarNombre());
