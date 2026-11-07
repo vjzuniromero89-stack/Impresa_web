@@ -30,3 +30,5 @@ nav a{white-space:nowrap}
 
 img.mk{aspect-ratio:1;background:radial-gradient(circle at 50% 40%,#a9b4c1,#8692a1 70%,#727e8d);opacity:.55}img.mk.lista{opacity:1;transition:opacity .3s}
 .vg.verDis .vgImg{padding:4%}.vg.verDis:not(.claro) .vgImg{background:#151515}
+
+.filtros{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 auto 22px}.filtros button{background:#102b47;border:1px solid #24577f;color:#cce7ff;padding:9px 15px;border-radius:999px;font-weight:800;cursor:pointer}.filtros button[aria-pressed=true]{background:#169cf1;border-color:#169cf1;color:#fff}.realProducts article[hidden]{display:none}

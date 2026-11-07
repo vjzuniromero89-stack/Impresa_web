@@ -108,3 +108,8 @@ Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfiel
 - Vista en grande: flechas = 17 colores; «Ver diseño» muestra el diseño solo con marca de agua «IMPRESA» en diagonal (`conMarca()`).
 - Bordado: tamaños propios (máx. 20 cm frente, 25 espalda, 10 muslo; empieza en 10/20/8). `analizarBordado()` cuenta colores principales (paleta 512): más de 8 o cobertura < 80 % = no se borda → bloquea Bordado (camiseta/conjunto pasan a DTF; Waffit no deja pedir).
 - D017–D019 (Adidas/Goku) quedan desactivados: solo se ven en el panel.
+
+## Tazas en la tienda (2026-11-07)
+- `disenos.taza boolean default false`: interruptor «Taza en la tienda» del panel (junto a «En la tienda» = camiseta). Un diseño puede salir como camiseta, como taza o como las dos.
+- La foto de la taza se dibuja en el navegador (`mockupTaza()` en app.js): taza blanca 11 oz, el diseño (máx. 8.6 × 7.4 cm) curvado por columnas como sobre un cilindro. Precio `CFG.precios.taza` (250, muestra).
+- Tienda con filtros: Todo, Camisetas, Tazas y una pastilla por categoría. Los diseños de temporada (Navidad, Purísima) se agregan en el panel con esa categoría y un orden bajo para salir primero.

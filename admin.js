@@ -30,8 +30,8 @@ async function subir(file,carpeta){if(file.size>50*1024*1024)throw new Error('El
 const TABLAS={
   productos:{orden:'orden',foto:'foto_url',carpeta:'productos',vacio:{nombre:'',detalle:'',precio:0,foto_url:'',orden:99,activo:true},
     campos:[['nombre','Nombre','text',1],['detalle','Detalle (ej. Camiseta negra • DTF • diseño D007)','text'],['precio','Precio C$','number',1],['enlace','Enlace «Cambiar color» (opcional, empieza con disena.html?)','text'],['orden','Orden','number'],['activo','Visible en la web','check']]},
-  disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{en_tienda:true,codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,precio:500,color:'Negro',orden:99,activo:true},
-    campos:[['en_tienda','En la tienda','switch'],['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['precio','Precio en la tienda C$','number'],['color','Color de camiseta en la tienda (ej. Negro, Blanco, Rosado)','text'],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
+  disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{en_tienda:true,taza:false,codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,precio:500,color:'Negro',orden:99,activo:true},
+    campos:[['en_tienda','En la tienda','switch'],['taza','Taza en la tienda','switch'],['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['precio','Precio en la tienda C$','number'],['color','Color de camiseta en la tienda (ej. Negro, Blanco, Rosado)','text'],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   videos:{orden:'orden',foto:'portada_url',carpeta:'videos',vacio:{titulo:'',portada_url:'',video_url:'',orden:99,activo:true},
     campos:[['titulo','Título','text',1],['video_url','Video: enlace de YouTube o archivo','video'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   puntos_entrega:{orden:'orden',vacio:{nombre:'',direccion:'',referencia:'',horario:'12:00 m – 2:00 pm',lat:null,lng:null,orden:99,activo:true},
@@ -78,14 +78,15 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
       fi.onchange=()=>{nuevaImpresion=fi.files[0];if(nuevaImpresion)fb.firstChild.textContent=`Se subirá: ${nuevaImpresion.name} (${(nuevaImpresion.size/1e6).toFixed(1)} MB)`};fb.appendChild(fi);lb.append(t,fila2,fb)}
     // Publicar en la tienda también requiere que el diseño sea visible.
     else if(tipo==='switch'){lb.className='ancho swRow';const b=document.createElement('button');b.type='button';b.className='swTienda';b.name=k;const m=document.createElement('span');m.className='msg';
-      const poner=v=>{b.setAttribute('aria-pressed',String(v));b.innerHTML=v?'<i></i> En la tienda':'<i></i> Agregar a la tienda'};
+      const [si,no]=k==='taza'?['Taza en la tienda','Agregar taza a la tienda']:['En la tienda','Agregar a la tienda'];
+      const poner=v=>{b.setAttribute('aria-pressed',String(v));b.innerHTML=`<i></i> ${v?si:no}`};
       poner(row[k]===true&&row.activo!==false);
       b.onclick=async()=>{const anterior=b.getAttribute('aria-pressed')==='true',v=!anterior,vis=campos.querySelector('[name=activo]'),antesVisible=vis?.checked;
         if(!row.id){poner(v);if(v&&vis)vis.checked=true;return}
         b.disabled=true;m.className='msg';m.textContent='Guardando…';
         try{const cambios=v?{[k]:true,activo:true}:{[k]:false};
-          const {data,error}=await sb.from(t).update(cambios).eq('id',row.id).select('id,en_tienda,activo').single();
-          if(error)throw error;if(!data||data.en_tienda!==v||(v&&!data.activo))throw new Error('No se pudo confirmar el cambio. Recarga e inténtalo de nuevo.');
+          const {data,error}=await sb.from(t).update(cambios).eq('id',row.id).select(`id,${k},activo`).single();
+          if(error)throw error;if(!data||data[k]!==v||(v&&!data.activo))throw new Error('No se pudo confirmar el cambio. Recarga e inténtalo de nuevo.');
           Object.assign(row,cambios);poner(v);if(v&&vis)vis.checked=true;
           if(v)el.classList.remove('inactiva');m.className='msg ok';m.textContent=v?'Ahora está en la tienda ✓':'Quitado de la tienda ✓';
         }catch(error){poner(anterior);if(vis)vis.checked=antesVisible;m.className='msg err';m.textContent=error.message||'No se pudo guardar'}
