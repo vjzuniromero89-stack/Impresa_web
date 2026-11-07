@@ -112,7 +112,9 @@ function dibujarTaza(x,texture,angle=0,offset=0){
   if(texture.wrap)for(let X=L;X<R;X++){const u=(X+.5-cx)/rx,th=Math.asin(Math.max(-1,Math.min(1,u))),cm=th*Rcm+texture.center+angle/360*circ+offset,pos=((cm%circ)+circ)%circ;
     // El área junto al asa es cerámica blanca; el resto muestra los 21 cm completos.
     if(pos>=21)continue;const sw=Math.min(2480-pos/21*2480,Math.max(1,Rcm/(rx*Math.max(.05,Math.cos(th)))*2480/21));
-    y.drawImage(texture.wrap,pos/21*2480,0,sw,1122,X,T+6+ry*(Math.cos(th)-1)*.9,1,B-T-10)}
+    // Los bordes de la impresión siguen las curvas superior e inferior del cilindro.
+    const top=T+ry*Math.cos(th)+2;
+    y.drawImage(texture.wrap,pos/21*2480,0,sw,1122,X,top,1,B-T-4)}
   y.globalCompositeOperation='source-atop';const sg=y.createLinearGradient(L,0,R,0);[[0,'rgba(0,0,0,.5)'],[.12,'rgba(0,0,0,.16)'],[.27,'rgba(255,255,255,.18)'],[.33,'rgba(255,255,255,.18)'],[.45,'rgba(0,0,0,0)'],[.75,'rgba(0,0,0,.08)'],[.92,'rgba(0,0,0,.28)'],[1,'rgba(0,0,0,.5)']].forEach(([p,c])=>sg.addColorStop(p,c));y.fillStyle=sg;y.fillRect(0,0,800,800);y.globalCompositeOperation='source-over';
   x.save();cuerpo();x.clip();x.drawImage(texture.layer,0,0);x.restore();
   x.fillStyle='#eef1f4';x.beginPath();x.ellipse(cx,T,rx,ry,0,0,7);x.fill();const ig=x.createLinearGradient(0,T-ry,0,T+ry);ig.addColorStop(0,'#8c96a1');ig.addColorStop(1,'#dce1e6');x.fillStyle=ig;x.beginPath();x.ellipse(cx,T+1,rx-11,ry-4,0,0,7);x.fill();
