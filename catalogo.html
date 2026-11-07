@@ -38,7 +38,7 @@
 <script>
 (async()=>{
 const tmp=document.createElement('canvas');tmp.width=tmp.height=800;const tx=tmp.getContext('2d');
-for(const grid of $$('.grid[data-prenda]')){const id=grid.dataset.prenda,p=PRENDAS[id];await cargarPrenda(id==='legging'?'modelo':id);
+for(const grid of $$('.grid[data-prenda]')){const id=grid.dataset.prenda,p=PRENDAS[id];await cargarPrenda(id==='legging'?'modelo':id,false);
   for(const c of p.colores){const card=document.createElement('article');card.className='card';
     const cv=document.createElement('canvas');cv.width=cv.height=360;cv.setAttribute('role','img');cv.setAttribute('aria-label',`${p.corto} ${c.nombre}`);
     if(id==='legging')pintarCamisa(tx,'modelo','frente','#ffffff','M',c.hex);else pintarCamisa(tx,id,Object.keys(p.fotos)[0],c.hex,'M');cv.getContext('2d').drawImage(tmp,0,0,360,360);

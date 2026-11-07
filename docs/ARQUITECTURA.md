@@ -84,11 +84,12 @@ Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfiel
 
 ## Conjunto (2026-11-07)
 - Prenda `conjunto` = camiseta + legging, se eligen juntos (mujer o niña), solo DTF. Cada pieza tiene su color.
-- Vista de frente = foto de una modelo (`assets/modelo/`): camiseta arriba y legging abajo, generadas en verde y magenta y separadas en `mascara.png` (R camiseta, G legging, B luz) para teñir cada pieza; la espalda usa la camiseta sola. Zonas con su propia escala (`pct`, ~0.5 %/cm): pecho y muslo izquierdo. `piezaDe()`, `zonaDe()` y `pctDe()` en `camisas.js`.
+- Modelo de cuerpo entero en 8 vistas (`assets/modelo/vNNN.jpg` + `vNNN-mascara.png`: R camiseta, G legging, B luz), generadas en verde y magenta para teñir cada pieza. Frente, espalda y legging van sobre la modelo (`pieza:'modelo'`). Zonas con su propia escala (`pct` 0.31 %/cm): pecho, espalda y muslo izquierdo. `piezaDe()`, `zonaDe()`, `pctDe()` y `vistaDe()` en `camisas.js`.
 - Precio de muestra en `config.js`: Conjunto DTF C$ 750 (+150 si la camiseta lleva frente y espalda).
 - Nota: `img.decode()` se quedaba colgado en algunos navegadores; se usa `cargarImg()` (onload).
 
 ## Diseñador (2026-11-07)
 - Diseño nuevo = 30 cm o lo más grande que quepa en la zona (`maxCm`). «Elige uno de nuestros diseños» abre la tabla `disenos` en un `<dialog>` dentro de disena.html.
-- Giro 360°: arrastrar la camisa o los botones la voltea con `rotateY` (`#giro`); pasando 90° pinta la espalda. Solo hay fotos de frente y espalda (sin vistas de lado); en el conjunto la espalda es la camiseta sola.
+- Giro 360°: una foto por ángulo (`giro` en `PRENDAS`, cada 45°; camiseta y modelo 8, Waffit 6 — faltan 45° y 315°). Arrastrar pasa por las fotos; de 90° a 270° se edita la espalda. En diagonal el diseño se encoge y se corre como sobre un cilindro (`eje` = ancho de la prenda en cada vista); de lado no se ve. El diseño solo se mueve en frente/espalda.
+- Fuentes y scripts del giro: `D:\proyectos\impresa-disenos-impresion\giro360` (`procesar.py` corta y alinea; `recorte_brillo.py` para fondos negros con halo).
 - Conjunto: botón «Poner también en el legging» copia el diseño al muslo.

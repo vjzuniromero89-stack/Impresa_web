@@ -4,6 +4,7 @@ const stage=$('#stage');if(!stage)return;
 const TALLAS={adulto:['XS','S','M','L','XL','2XL','3XL'],nino:['2','4','6','8','10','12','14','16']};
 const qs=new URLSearchParams(location.search);
 const st={prenda:PRENDAS[qs.get('prenda')]?qs.get('prenda'):'camiseta',tec:'DTF',color:null,lado:['espalda','legging'].includes(qs.get('lado'))?qs.get('lado'):'frente',lados:{frente:null,espalda:null,legging:null},colorLeg:null};
+st.vista=st.lado==='espalda'?180:0; // ángulo de la foto que se ve (giro 360)
 $$('.ladoBtn').forEach(x=>x.classList.toggle('active',x.dataset.lado===st.lado));
 const P=()=>PRENDAS[st.prenda],Z=()=>zonaDe(st.prenda,st.lado),esConjunto=()=>st.prenda==='conjunto';
 const LADOS=()=>esConjunto()?['frente','espalda','legging']:['frente','espalda'];
@@ -12,7 +13,7 @@ st.color=P().colores.find(c=>c.codigo&&c.codigo===qs.get('color')||c.nombre===qs
 st.colorLeg=PRENDAS.legging.colores.find(c=>c.nombre===qs.get('leg'))||PRENDAS.legging.colores.find(c=>c.nombre==='Negro');
 const canvas=$('#shirt'),ctx=canvas.getContext('2d');
 const talla=()=>$$('.qty').find(q=>+q.value>0)?.dataset.talla||'M';
-const pintar=()=>pintarCamisa(ctx,st.prenda,st.lado,colorDe(st.lado==='legging'?'frente':st.lado).hex,talla(),st.colorLeg.hex);
+const pintar=()=>pintarCamisa(ctx,st.prenda,vistaDe(st.vista),colorDe(st.lado==='legging'?'frente':st.lado).hex,talla(),st.colorLeg.hex);
 const pct=(l=st.lado)=>pctDe(st.prenda,l);
 // en la modelo, frente de camiseta y legging se ven juntos: el diseño del otro lado se muestra fijo
 const juntos=l=>esConjunto()&&l!=='espalda'?['frente','legging']:[l];
@@ -20,13 +21,19 @@ const juntos=l=>esConjunto()&&l!=='espalda'?['frente','legging']:[l];
 /* ---------- Diseño sobre la camisa ---------- */
 const zonaEl=$('#zona'),dImg=$('#designImg');
 function colocarZona(){const z=Z();Object.assign(zonaEl.style,{left:z.x+'%',top:z.y+'%',width:z.w+'%',height:z.h+'%'})}
-function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();
+// De frente o espalda el diseño va tal cual; en diagonal se encoge y se corre como sobre un cilindro; de lado no se ve
+function colocarImg(img,d,lado){const cara=lado==='espalda'?180:0,t=((st.vista-cara+540)%360-180)*Math.PI/180,c=Math.cos(t);
+  img.hidden=c<0.3;if(img.hidden)return;if(img.src!==d.data)img.src=d.data;
+  const E=PRENDAS[piezaDe(st.prenda)].eje,B=E[st.vista],B0=E[cara],eje=(B[0]+B[1])/2,eje0=(B0[0]+B0[1])/2,r=(B0[1]-B0[0])/2*0.55;
+  const w=d.cm*pct(lado),h=w*d.ratio,cx=eje-r*Math.sin(t)+(d.cx-eje0)*c;
+  Object.assign(img.style,{width:w*c+'%',height:h+'%',left:(cx-w*c/2)+'%',top:(d.cy-h/2)+'%'})}
+const deFrente=()=>st.vista===0||st.vista===180;
+function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();zonaEl.hidden=!deFrente();dImg.style.pointerEvents=deFrente()?'':'none';
   const otro=juntos(st.lado).find(l=>l!==st.lado),od=otro&&st.lados[otro],oi=$('#designImg2');oi.hidden=!od;
-  if(od){if(oi.src!==od.data)oi.src=od.data;const w=od.cm*pct(otro),h=w*od.ratio;Object.assign(oi.style,{width:w+'%',left:(od.cx-w/2)+'%',top:(od.cy-h/2)+'%'})}$('#ladoNombre').textContent=st.lado==='legging'?'el legging (muslo)':st.lado==='frente'?(st.prenda==='waffit'?'el pecho':esConjunto()?'el frente de la camiseta':'el frente'):'la espalda';
+  if(od)colocarImg(oi,od,otro);$('#ladoNombre').textContent=st.lado==='legging'?'el legging (muslo)':st.lado==='frente'?(st.prenda==='waffit'?'el pecho':esConjunto()?'el frente de la camiseta':'el frente'):'la espalda';
   $('#sizeBox').hidden=!d;$('#quitar').hidden=!d;zonaEl.classList.toggle('vacia',!d);
   if(!d){dImg.hidden=true;return}
-  dImg.hidden=false;if(dImg.src!==d.data)dImg.src=d.data;$('#legCopia').hidden=!esConjunto()||st.lado==='legging'||!!st.lados.legging;
-  const w=d.cm*pct(),h=w*d.ratio;Object.assign(dImg.style,{width:w+'%',left:(d.cx-w/2)+'%',top:(d.cy-h/2)+'%'});
+  colocarImg(dImg,d,st.lado);$('#legCopia').hidden=!esConjunto()||st.lado==='legging'||!!st.lados.legging;
   $('#fondoBtn').hidden=!d.sinFondo;$('#fondoBtn').textContent=d.usarSinFondo?'Poner fondo':'Quitar fondo';
   $('#cm').max=maxCm(d.ratio);$('#cm').value=d.cm;$('#cmTxt').textContent=`${d.cm} cm de ancho`}
 function maxCm(ratio,lado=st.lado){const z=zonaDe(st.prenda,lado),k=pct(lado);return Math.max(3,Math.floor(Math.min(30,z.w/k,z.h/k/ratio)))}
@@ -95,18 +102,20 @@ dImg.addEventListener('pointermove',e=>{if(!drag)return;const d=st.lados[st.lado
 ['pointerup','pointercancel'].forEach(t=>dImg.addEventListener(t,()=>drag=null));
 
 /* ---------- Opciones ---------- */
-/* Giro 360°: arrastrar la camisa (o los botones) la voltea; pasando 90° se ve la espalda. Solo hay fotos de frente y espalda. */
-const giro=$('#giro');let ang=st.lado==='espalda'?180:0,anim=0,giroDrag=null;
+/* Giro 360°: arrastrar la camisa (o los botones) pasa por las fotos de cada ángulo (cada 45°); de 90° a 270° se edita la espalda. */
+let ang=st.vista,anim=0,giroDrag=null;
+const dif=(x,y)=>((x-y)%360+540)%360-180; // diferencia de ángulos con signo, -180..180
 function ponerLado(l){if(st.lado===l)return;st.lado=l;$$('.ladoBtn').forEach(x=>x.classList.toggle('active',x.dataset.lado===l));pintar();mostrarDiseno()}
-function setAng(a){ang=a;const n=((a%360)+360)%360,atras=n>90&&n<270;
-  ponerLado(atras?'espalda':st.lado==='espalda'?'frente':st.lado);giro.style.transform=`rotateY(${atras?n-180:n>180?n-360:n}deg)`}
+function setAng(a){ang=a;const lista=PRENDAS[piezaDe(st.prenda)].giro,v=lista.reduce((b,x)=>Math.abs(dif(x,a))<Math.abs(dif(b,a))?x:b,lista[0]);
+  const l=v>90&&v<270?'espalda':st.lado==='espalda'?'frente':st.lado;if(v===st.vista&&l===st.lado)return;
+  st.vista=v;if(l!==st.lado){st.lado=l;$$('.ladoBtn').forEach(x=>x.classList.toggle('active',x.dataset.lado===l))}pintar();mostrarDiseno()}
 function girarA(fin,lado){cancelAnimationFrame(anim);const ini=ang,t0=performance.now();
   const paso=t=>{const k=Math.min(1,(t-t0)/450);setAng(ini+(fin-ini)*(1-Math.pow(1-k,3)));if(k<1)anim=requestAnimationFrame(paso);else if(lado)ponerLado(lado)};anim=requestAnimationFrame(paso)}
 const cerca=base=>base+Math.round((ang-base)/360)*360; // la vuelta más corta
 $$('.ladoBtn').forEach(b=>b.addEventListener('click',()=>{const l=b.dataset.lado;girarA(cerca(l==='espalda'?180:0),l)}));
 stage.addEventListener('pointerdown',e=>{if(e.target===dImg)return;cancelAnimationFrame(anim);stage.setPointerCapture(e.pointerId);giroDrag={x:e.clientX,ang}});
 stage.addEventListener('pointermove',e=>{if(giroDrag)setAng(giroDrag.ang+(e.clientX-giroDrag.x)/stage.clientWidth*360)});
-['pointerup','pointercancel'].forEach(t=>stage.addEventListener(t,()=>{if(!giroDrag)return;giroDrag=null;girarA(Math.round(ang/180)*180)}));
+['pointerup','pointercancel'].forEach(t=>stage.addEventListener(t,()=>{if(!giroDrag)return;giroDrag=null;ang+=dif(st.vista,ang)}));
 function renderColores(){const box=$('#colores');box.innerHTML='';const lista=P().colores; // DTF y bordado van en cualquier color
   if(!lista.includes(st.color))st.color=lista.find(c=>c.nombre===st.color?.nombre)||lista[0];
   lista.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='sw'+(c===st.color?' on':'');b.style.background=c.hex;const n=c.codigo?`${c.nombre} (${c.codigo})`:c.nombre;b.title=n;b.setAttribute('aria-label',n);b.setAttribute('aria-pressed',c===st.color);
@@ -122,7 +131,7 @@ function syncTec(){const ts=P().tecnicas;if(!ts.includes(st.tec))st.tec=ts[0];
   $$('input[name=tec]').forEach(r=>{const ok=ts.includes(r.value);r.disabled=!ok;r.checked=r.value===st.tec;r.closest('.tec').classList.toggle('off',!ok)});notaTec()}
 function notaTec(){stage.classList.toggle('bordado',st.tec==='Bordado');
   $('#tecNota').textContent=st.tec==='Bordado'?`Bordado${st.prenda==='waffit'?' (la Waffit solo se borda)':''}: funciona mejor con logos de pocos colores y sin degradados. IMPRESA revisa tu logo antes de bordar.`:'DTF: impresión a todo color, perfecta para diseños grandes, fotos y degradados.'}
-$$('input[name=prenda]').forEach(r=>{r.checked=r.value===st.prenda;r.addEventListener('change',async()=>{st.prenda=r.value;await cargarPrenda(st.prenda);
+$$('input[name=prenda]').forEach(r=>{r.checked=r.value===st.prenda;r.addEventListener('change',async()=>{st.prenda=r.value;await cargarPrenda(st.prenda);st.vista=ang=st.lado==='espalda'?180:0;
   $('.ladoBtn[data-lado=frente]').textContent=st.prenda==='waffit'?'Frente (pecho)':esConjunto()?'Camiseta frente':'Frente';$('.ladoBtn[data-lado=espalda]').textContent=esConjunto()?'Camiseta espalda':'Espalda';
   $('.ladoBtn[data-lado=legging]').hidden=!esConjunto();if(!esConjunto()&&st.lado==='legging')$('.ladoBtn[data-lado=frente]').click();
   for(const l of LADOS())if(st.lados[l])limitar(st.lados[l],l); // el diseño se ajusta a la nueva zona
