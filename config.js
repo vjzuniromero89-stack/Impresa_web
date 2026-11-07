@@ -3,6 +3,6 @@ window.IMPRESA = {
   // WhatsApp de IMPRESA: código de país + número, sin + ni espacios
   whatsapp: '50581214068',
   // Supabase del proyecto impresaweb (URL y clave pública "anon"). Vacíos = solo WhatsApp.
-  supabaseUrl: '',
-  supabaseKey: ''
+  supabaseUrl: 'https://hyuxtupnjovjgbflblbx.supabase.co',
+  supabaseKey: 'sb_publishable_PdTx9tjzJMzKoTm8tdZpGQ_g1_LpF4x'
 };

@@ -38,7 +38,8 @@ $$('.video').forEach(b=>b.addEventListener('click',()=>{if($('#videoTitle'))$('#
 
 /* ---------- Envío: Supabase (si está configurado) + WhatsApp ---------- */
 const sbReady=()=>CFG.supabaseUrl&&CFG.supabaseKey;
-const sbHeaders=extra=>({apikey:CFG.supabaseKey,Authorization:`Bearer ${CFG.supabaseKey}`,...extra});
+// clave sb_publishable_ va solo en apikey; una clave anon antigua (JWT) también en Authorization
+const sbHeaders=extra=>({apikey:CFG.supabaseKey,...(CFG.supabaseKey.startsWith('sb_')?{}:{Authorization:`Bearer ${CFG.supabaseKey}`}),...extra});
 async function uploadDesign(d){const blob=await (await fetch(d.data)).blob(),ext=(d.nombre.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,''),path=`${crypto.randomUUID()}.${ext}`;
   const r=await fetch(`${CFG.supabaseUrl}/storage/v1/object/disenos/${path}`,{method:'POST',headers:sbHeaders({'Content-Type':blob.type||'application/octet-stream'}),body:blob});
   if(!r.ok)throw new Error('No se pudo subir el diseño');return `${CFG.supabaseUrl}/storage/v1/object/public/disenos/${path}`}
