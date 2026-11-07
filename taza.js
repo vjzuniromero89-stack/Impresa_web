@@ -13,10 +13,7 @@ function render(){const term=norm($('#tazaBuscar').value),shown=rows.filter(d=>(
 $('#tazaBuscar').addEventListener('input',render);$('#tazaCantidad').addEventListener('change',total);
 $$('[data-offset]').forEach(b=>b.onclick=()=>{offset=Number(b.dataset.offset);$$('[data-offset]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));paint()});
 // Exportación para el pedido: una plantilla de taza, nunca la foto del producto.
-async function printLayout(d){const img=await cargarImg(d.preview_url),c=document.createElement('canvas');c.width=2480;c.height=1122;const x=c.getContext('2d');x.fillStyle='#ffffff';x.fillRect(0,0,c.width,c.height);
- if(d.formato_taza==='envolvente'){const k=Math.min(c.width/img.naturalWidth,c.height/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;x.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h)}
- else{const k=Math.min(1020/img.naturalWidth,1000/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;for(const center of [620,1860])x.drawImage(img,center-w/2,(c.height-h)/2,w,h)}
- return c.toDataURL('image/png')}
+async function printLayout(d){const img=await cargarImg(d.preview_url);return plantillaTaza(img,d).toDataURL('image/png')}
 $('#tazaAgregar').onclick=async()=>{if(!selected||!preview||busy)return;const d=selected,n=quantity(),src=preview;busy=true;$('#tazaAgregar').disabled=true;const status=$('#tazaPedidoEstado');status.textContent='Preparando tu taza…';
  try{const data=await printLayout(d),file={nombre:d.codigo+'-taza-21x9.5cm.png',data};let printFile;if(sbReady())printFile={url:await uploadFile(file),lado:'plantilla taza'};else printFile={...file,lado:'plantilla taza'};
   if(!addItem({nombre:'Taza '+d.nombre,detalle:'Taza blanca 11 oz • sublimación • diseño '+d.codigo+' • plantilla 21 × 9,5 cm',qty:n,precio:precioTaza(d),vista:src,archivos:[{codigo:d.codigo,lado:'diseño catálogo'},printFile]}))throw new Error('No se pudo guardar la taza en tu pedido.');

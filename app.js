@@ -77,6 +77,22 @@ function verColores(d){const cols=PRENDAS.camiseta.colores,ini=Math.max(0,cols.f
   verGrande(cols.map(c=>({src:()=>mockup(d,c),titulo:`${d.codigo} · ${d.nombre}`,sub:`Camiseta color ${c.nombre.toLowerCase()} · DTF · ${money(precioDe(d))} · ‹ › otros colores`,oscuro:false,diseno:()=>conMarca(d.preview_url),accion:{texto:'Pedir en este color',href:enlaceDe(d,c.nombre)}})),ini)}
 // Taza blanca 11 oz dibujada en el navegador (8.2 × 9.5 cm); el diseño se curva como sobre un cilindro
 const precioTaza=d=>d?.precio_taza!=null&&Number.isFinite(+d.precio_taza)?+d.precio_taza:(CFG.precios?.taza??200);
+// Los diseños panorámicos se detectan aunque un registro antiguo no tenga formato.
+function esEnvolventeTaza(img,d){return d.formato_taza==='envolvente'||img.naturalWidth/img.naturalHeight>1.6}
+function plantillaTaza(img,d){
+  const c=document.createElement('canvas');c.width=2480;c.height=1122;const x=c.getContext('2d');
+  x.fillStyle='#ffffff';x.fillRect(0,0,c.width,c.height);
+  if(esEnvolventeTaza(img,d)){
+    // Cubrir sin estirar: solo se recorta el mínimo sobrante de proporción.
+    const k=Math.max(c.width/img.naturalWidth,c.height/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;
+    x.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h);
+  }else{
+    // Motivos grandes, hasta el borde superior e inferior, a ambos lados.
+    const k=Math.min(1190/img.naturalWidth,1102/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;
+    for(const center of [620,1860])x.drawImage(img,center-w/2,(c.height-h)/2,w,h);
+  }
+  return c;
+}
 const _mt={};
 function mockupTaza(d,opciones={}){const key=[d.codigo,d.preview_url,d.formato_taza,opciones.offset||0].join('|');return _mt[key]??=(async()=>{const img=d.preview_url?await cargarImg(d.preview_url):null,o=document.createElement('canvas');o.width=o.height=800;const x=o.getContext('2d');
   const g=x.createRadialGradient(400,320,0,400,320,560);g.addColorStop(0,'#a9b4c1');g.addColorStop(.7,'#8692a1');g.addColorStop(1,'#727e8d');x.fillStyle=g;x.fillRect(0,0,800,800);
@@ -87,15 +103,12 @@ function mockupTaza(d,opciones={}){const key=[d.codigo,d.preview_url,d.formato_t
   const cuerpo=()=>{x.beginPath();x.moveTo(L,T);x.lineTo(L,B);x.ellipse(cx,B,rx,ry,0,Math.PI,0,true);x.lineTo(R,T);x.ellipse(cx,T,rx,ry,0,0,Math.PI);x.closePath()};
   const lg=x.createLinearGradient(L,0,R,0);[[0,'#98a1ab'],[.12,'#d9dee3'],[.3,'#ffffff'],[.45,'#fbfcfd'],[.75,'#e3e7eb'],[.92,'#bac2ca'],[1,'#96a0aa']].forEach(([p,c])=>lg.addColorStop(p,c));
   cuerpo();x.fillStyle=lg;x.fill();
-  // El envolvente ocupa 21 × 9,5 cm; un motivo vertical va en ambos lados.
+  // La misma plantilla completa se usa en la vista y en el archivo del pedido.
   const D=document.createElement('canvas');D.width=D.height=800;const y=D.getContext('2d');
-  if(img){const wrap=document.createElement('canvas');wrap.width=2480;wrap.height=1122;const wctx=wrap.getContext('2d');
-    const envolvente=d.formato_taza==='envolvente';
-    if(envolvente){const k=Math.min(2480/img.naturalWidth,1122/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;wctx.fillStyle='#fff';wctx.fillRect(0,0,2480,1122);wctx.drawImage(img,(2480-w)/2,(1122-h)/2,w,h)}
-    else{const k=Math.min(1020/img.naturalWidth,1000/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;for(const center of [620,1860])wctx.drawImage(img,center-w/2,(1122-h)/2,w,h)}
-    const viewCenter=envolvente?10.5:5.25;
+  if(img){const wrap=plantillaTaza(img,d);
+    const viewCenter=esEnvolventeTaza(img,d)?10.5:5.25;
     for(let X=L;X<R;X++){const u=(X+.5-cx)/rx,th=Math.asin(Math.max(-1,Math.min(1,u))),cm=th*Rcm+viewCenter+(opciones.offset||0),pos=((cm%21)+21)%21;
-      y.drawImage(wrap,pos/21*2480,0,Math.max(1,Rcm/(rx*Math.max(.05,Math.cos(th)))*2480/21),1122,X,T+ry*.3+ry*(Math.cos(th)-1)*.9,1,(B-T)*.94)}
+      y.drawImage(wrap,pos/21*2480,0,Math.max(1,Rcm/(rx*Math.max(.05,Math.cos(th)))*2480/21),1122,X,T+6+ry*(Math.cos(th)-1)*.9,1,B-T-10)}
   }
   y.globalCompositeOperation='source-atop';const sg=y.createLinearGradient(L,0,R,0);[[0,'rgba(0,0,0,.5)'],[.12,'rgba(0,0,0,.16)'],[.27,'rgba(255,255,255,.18)'],[.33,'rgba(255,255,255,.18)'],[.45,'rgba(0,0,0,0)'],[.75,'rgba(0,0,0,.08)'],[.92,'rgba(0,0,0,.28)'],[1,'rgba(0,0,0,.5)']].forEach(([p,c])=>sg.addColorStop(p,c));
   y.fillStyle=sg;y.fillRect(0,0,800,800);x.save();cuerpo();x.clip();x.drawImage(D,0,0);x.restore();
