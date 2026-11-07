@@ -25,27 +25,48 @@ const PRENDAS={
     material:'poliéster',
     // catálogo U-Waffit (códigos visibles en la imagen del cliente, 2026-11-07)
     colores:[['Amarillo','#f5c518',1,'W224'],['Vino','#7a1f2b',0,'W203'],['Naranja','#f26a1b',0,'W207'],['Verde','#1f9a45',0,'W211'],['Turquesa','#3fb0e0',0,'W212'],['Gris oscuro','#5a5d63',0,'W217'],['Azul royal','#1e4fc9',0,'W223'],['Beige','#e2cfa8',1,'W230'],['Gris','#8d9096',0,'W233'],['Blanco','#ffffff',1,'W236'],['Negro','#151515',0,'W237'],['Azul marino','#1d2340',0,'W238'],['Rosado','#f3b8cc',1,'W242']]
+  },
+  // pieza del conjunto (no se vende sola en el diseñador)
+  legging:{
+    nombre:'Legging',corto:'Legging',
+    fotos:{legging:'assets/legging/frente.png'},
+    zonas:{legging:{x:53,y:24,w:12,h:27}}, // muslo izquierdo de quien lo usa (derecha en la foto)
+    etiqueta:null,
+    // shortcut: colores de muestra; cambiar por los que consiga IMPRESA
+    colores:[['Negro','#151515'],['Gris oscuro','#55575b'],['Azul marino','#1d2340'],['Vino','#6a1b2b'],['Café','#4a3326'],['Verde botella','#1e3b2b'],['Rosado','#f3c0d6',1],['Beige','#e3d3bd',1],['Blanco','#ffffff',1]]
+  },
+  // Conjunto = camiseta + legging, se eligen juntos (cliente, 2026-11-07)
+  conjunto:{
+    nombre:'Conjunto (camiseta + legging)',corto:'Conjunto',
+    piezas:{frente:'camiseta',espalda:'camiseta',legging:'legging'},
+    tallasNino:true,soloMujer:true,
+    tecnicas:['DTF'],
+    colores:[]
   }
 };
-for(const p of Object.values(PRENDAS))p.colores=p.colores.map(([nombre,hex,claro,codigo])=>({nombre,hex,claro:!!claro,codigo:codigo||''}));
+PRENDAS.conjunto.colores=PRENDAS.camiseta.colores;
+for(const p of Object.values(PRENDAS))if(p.colores.length&&Array.isArray(p.colores[0]))p.colores=p.colores.map(([nombre,hex,claro,codigo])=>({nombre,hex,claro:!!claro,codigo:codigo||''}));
 const PCT_CM=100*8.1/800;
 
 const _cache={};
 function cargarImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 // Luz (0..1) y transparencia de cada píxel, una vez por prenda y lado
+const piezaDe=(id,lado)=>PRENDAS[id].piezas?.[lado]||id;
+const zonaDe=(id,lado)=>PRENDAS[piezaDe(id,lado)].zonas[lado];
 async function cargarPrenda(id){if(_cache[id])return _cache[id];const p=PRENDAS[id],out={};
-  for(const lado of ['frente','espalda']){const img=await cargarImg(p.fotos[lado]),c=document.createElement('canvas');c.width=c.height=800;const x=c.getContext('2d');x.drawImage(img,0,0,800,800);
+  if(p.piezas){for(const pz of new Set(Object.values(p.piezas)))await cargarPrenda(pz);return _cache[id]=true}
+  for(const lado of Object.keys(p.fotos)){const img=await cargarImg(p.fotos[lado]),c=document.createElement('canvas');c.width=c.height=800;const x=c.getContext('2d');x.drawImage(img,0,0,800,800);
     const d=x.getImageData(0,0,800,800).data,l=new Float32Array(640000),a=new Uint8ClampedArray(640000);
     for(let i=0,k=0;k<640000;i+=4,k++){l[k]=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/245;a[k]=d[i+3]}
     out[lado]={l,a,ribete:p.ribetes?await cargarImg(p.ribetes[lado]):null}}
   return _cache[id]=out}
 
 // Pinta la camisa en un lienzo de 800×800 (sincrónico; cargarPrenda antes)
-function pintarCamisa(ctx,id,lado,hex,talla){const s=_cache[id]?.[lado];if(!s)return;const out=ctx.createImageData(800,800),o=out.data,[r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),lum=(0.299*r+0.587*g+0.114*b)/255,brillo=(1-lum)*30;
+function pintarCamisa(ctx,id,lado,hex,talla){id=piezaDe(id,lado);const s=_cache[id]?.[lado];if(!s)return;const out=ctx.createImageData(800,800),o=out.data,[r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),lum=(0.299*r+0.587*g+0.114*b)/255,brillo=(1-lum)*30;
   // brillo suave en colores oscuros: con más, el negro se veía gris
   for(let k=0,i=0;k<640000;k++,i+=4){const v=Math.min(1.04,s.l[k]),h=brillo*Math.pow(v,10);o[i]=r*v+h;o[i+1]=g*v+h;o[i+2]=b*v+h;o[i+3]=s.a[k]}
   ctx.putImageData(out,0,0);if(s.ribete)ctx.drawImage(s.ribete,0,0,800,800);
-  if(lado==='frente')etiquetaKlasiko(ctx,PRENDAS[id].etiqueta,talla||'M')}
+  if(lado==='frente'&&PRENDAS[id].etiqueta)etiquetaKlasiko(ctx,PRENDAS[id].etiqueta,talla||'M')}
 
 // Etiqueta Klasiko dentro del cuello (aparte, para que no tome el color de la camisa)
 function etiquetaKlasiko(ctx,e,talla){ctx.save();ctx.translate(e.x,e.y);ctx.rotate(-0.03);ctx.textAlign='center';ctx.textBaseline='middle';

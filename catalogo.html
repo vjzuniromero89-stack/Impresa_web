@@ -30,6 +30,7 @@
 <main>
 <section class="pageHero"><p class="eyebrow">CAMISAS KLASIKO</p><h1>Catálogo de colores</h1><p>Elige el estilo y el color. Con un clic lo llevas al diseñador para poner tu logo.</p></section>
 <section class="cat" aria-labelledby="t-camiseta"><div class="catHead"><h2 id="t-camiseta"><small>Klasiko</small>Camisetas cuello redondo</h2><p>Algodón, unisex. Se personaliza con DTF o bordado en todos los colores.</p></div><div class="grid" data-prenda="camiseta"></div></section>
+<section class="cat" aria-labelledby="t-leg"><div class="catHead"><h2 id="t-leg"><small>Para conjunto</small>Leggings</h2><p>El conjunto lleva camiseta + legging: eliges el color de cada uno en el diseñador. Logo en el muslo con DTF.</p></div><div class="grid" data-prenda="legging"></div></section>
 <section class="cat" aria-labelledby="t-waffit"><div class="catHead"><h2 id="t-waffit"><small>Klasiko U-Waffit</small>Camisas polo Waffit</h2><p>Tipo polo con ribete gris en cuello y mangas. Se personaliza con bordado en todos los colores.</p></div><div class="grid" data-prenda="waffit"></div></section>
 </main>
 <footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer>
@@ -40,12 +41,12 @@ const tmp=document.createElement('canvas');tmp.width=tmp.height=800;const tx=tmp
 for(const grid of $$('.grid[data-prenda]')){const id=grid.dataset.prenda,p=PRENDAS[id];await cargarPrenda(id);
   for(const c of p.colores){const card=document.createElement('article');card.className='card';
     const cv=document.createElement('canvas');cv.width=cv.height=360;cv.setAttribute('role','img');cv.setAttribute('aria-label',`${p.corto} ${c.nombre}`);
-    pintarCamisa(tx,id,'frente',c.hex,'M');cv.getContext('2d').drawImage(tmp,0,0,360,360);
+    pintarCamisa(tx,id,Object.keys(p.fotos)[0],c.hex,'M');cv.getContext('2d').drawImage(tmp,0,0,360,360);
     card.append(cv);
     if(c.codigo){const k=document.createElement('span');k.className='cod';k.textContent=c.codigo;card.append(k)}
     const n=document.createElement('b');n.textContent=c.nombre;card.append(n);
-    const s=document.createElement('span');s.className='uso';const diseñable=true;s.textContent=p.tecnicas.join(' · ');card.append(s);
-    const a=document.createElement('a');if(diseñable){a.href=`disena.html?prenda=${id}&color=${encodeURIComponent(c.codigo||c.nombre)}`;a.textContent='Diseñar con este color'}else{a.href='contacto.html';a.textContent='Consultar';a.className='lisa'}card.append(a);
+    const s=document.createElement('span');s.className='uso';const diseñable=true;s.textContent=(p.tecnicas||['DTF']).join(' · ');card.append(s);
+    const a=document.createElement('a');if(diseñable){a.href=id==='legging'?'disena.html?prenda=conjunto&lado=legging':`disena.html?prenda=${id}&color=${encodeURIComponent(c.codigo||c.nombre)}`;a.textContent=id==='legging'?'Armar conjunto':'Diseñar con este color'}else{a.href='contacto.html';a.textContent='Consultar';a.className='lisa'}card.append(a);
     grid.append(card);await new Promise(r=>setTimeout(r)); // deja respirar al navegador entre camisas
   }}
 })();

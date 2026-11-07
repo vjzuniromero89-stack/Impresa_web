@@ -1,28 +1,30 @@
-/* Diseña tu camisa: camisas Klasiko reales (camiseta o Waffit) teñidas del color elegido, diseño por lado, solo DTF y Sublimación. */
+/* Diseña tu camisa: camisas Klasiko reales (camiseta, Waffit o conjunto camiseta + legging) teñidas del color elegido, diseño por lado; DTF y bordado. */
 (()=>{
 const stage=$('#stage');if(!stage)return;
 const TALLAS={adulto:['XS','S','M','L','XL','2XL','3XL'],nino:['2','4','6','8','10','12','14','16']};
 const qs=new URLSearchParams(location.search);
-const st={prenda:PRENDAS[qs.get('prenda')]?qs.get('prenda'):'camiseta',tec:'DTF',color:null,lado:qs.get('lado')==='espalda'?'espalda':'frente',lados:{frente:null,espalda:null}};
+const st={prenda:PRENDAS[qs.get('prenda')]?qs.get('prenda'):'camiseta',tec:'DTF',color:null,lado:['espalda','legging'].includes(qs.get('lado'))?qs.get('lado'):'frente',lados:{frente:null,espalda:null,legging:null},colorLeg:PRENDAS.legging.colores[0]};
 $$('.ladoBtn').forEach(x=>x.classList.toggle('active',x.dataset.lado===st.lado));
-const P=()=>PRENDAS[st.prenda],Z=()=>P().zonas[st.lado];
+const P=()=>PRENDAS[st.prenda],Z=()=>zonaDe(st.prenda,st.lado),esConjunto=()=>st.prenda==='conjunto';
+const LADOS=()=>esConjunto()?['frente','espalda','legging']:['frente','espalda'];
+const colorDe=l=>esConjunto()&&l==='legging'?st.colorLeg:st.color;
 st.color=P().colores.find(c=>c.codigo&&c.codigo===qs.get('color')||c.nombre===qs.get('color'))||P().colores[0];
 const canvas=$('#shirt'),ctx=canvas.getContext('2d');
 const talla=()=>$$('.qty').find(q=>+q.value>0)?.dataset.talla||'M';
-const pintar=()=>pintarCamisa(ctx,st.prenda,st.lado,st.color.hex,talla());
+const pintar=()=>pintarCamisa(ctx,st.prenda,st.lado,colorDe(st.lado).hex,talla());
 
 /* ---------- Diseño sobre la camisa ---------- */
 const zonaEl=$('#zona'),dImg=$('#designImg');
 function colocarZona(){const z=Z();Object.assign(zonaEl.style,{left:z.x+'%',top:z.y+'%',width:z.w+'%',height:z.h+'%'})}
-function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();$('#ladoNombre').textContent=st.lado==='frente'?(st.prenda==='waffit'?'el pecho':'el frente'):'la espalda';
+function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();$('#ladoNombre').textContent=st.lado==='legging'?'el legging (muslo)':st.lado==='frente'?(st.prenda==='waffit'?'el pecho':esConjunto()?'el frente de la camiseta':'el frente'):'la espalda';
   $('#sizeBox').hidden=!d;$('#quitar').hidden=!d;zonaEl.classList.toggle('vacia',!d);
   if(!d){dImg.hidden=true;return}
   dImg.hidden=false;if(dImg.src!==d.data)dImg.src=d.data;
   const w=d.cm*PCT_CM,h=w*d.ratio;Object.assign(dImg.style,{width:w+'%',left:(d.cx-w/2)+'%',top:(d.cy-h/2)+'%'});
   $('#fondoBtn').hidden=!d.sinFondo;$('#fondoBtn').textContent=d.usarSinFondo?'Poner fondo':'Quitar fondo';
   $('#cm').max=maxCm(d.ratio);$('#cm').value=d.cm;$('#cmTxt').textContent=`${d.cm} cm de ancho`}
-function maxCm(ratio,lado=st.lado){const z=P().zonas[lado];return Math.max(3,Math.floor(Math.min(30,z.w/PCT_CM,z.h/PCT_CM/ratio)))}
-function limitar(d,lado=st.lado){const z=P().zonas[lado];d.cm=Math.min(d.cm,maxCm(d.ratio,lado));const w=d.cm*PCT_CM,h=w*d.ratio;
+function maxCm(ratio,lado=st.lado){const z=zonaDe(st.prenda,lado);return Math.max(3,Math.floor(Math.min(30,z.w/PCT_CM,z.h/PCT_CM/ratio)))}
+function limitar(d,lado=st.lado){const z=zonaDe(st.prenda,lado);d.cm=Math.min(d.cm,maxCm(d.ratio,lado));const w=d.cm*PCT_CM,h=w*d.ratio;
   d.cx=Math.min(Math.max(d.cx,z.x+w/2),z.x+z.w-w/2);d.cy=Math.min(Math.max(d.cy,z.y+h/2),z.y+z.h-h/2)}
 
 $('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)usarArchivo(f)});
@@ -35,7 +37,7 @@ function usarArchivo(f,codigo=null){
   if(f.size>8e6){alert('La imagen pesa más de 8 MB. Prueba con una más liviana.');return}
   const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const z=Z(),sf=f.type==='image/svg+xml'?null:quitarFondo(img);
     const d={nombre:f.name,codigo,orig:{data:r.result,ratio:img.naturalHeight/img.naturalWidth||1},sinFondo:sf,usarSinFondo:!!sf};aplicarFondo(d);
-    d.cm=Math.min(st.prenda==='waffit'&&st.lado==='frente'?10:25,maxCm(d.ratio));d.cx=z.x+z.w/2;d.cy=z.y+d.cm*PCT_CM*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
+    d.cm=Math.min(st.lado==='legging'?8:st.prenda==='waffit'&&st.lado==='frente'?10:25,maxCm(d.ratio));d.cx=z.x+z.w/2;d.cy=st.lado==='legging'?z.y+z.h*0.4:z.y+d.cm*PCT_CM*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
 function aplicarFondo(d){const v=d.usarSinFondo&&d.sinFondo?d.sinFondo:d.orig;d.data=v.data;d.ratio=v.ratio;
   if(d.usarSinFondo&&d.sinFondo&&!/-sin-fondo\.png$/.test(d.nombre))d.nombre=d.nombre.replace(/\.[^.]+$/,'')+'-sin-fondo.png';else if(!d.usarSinFondo)d.nombre=d.nombre.replace(/-sin-fondo\.png$/,'.png')}
 $('#fondoBtn').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d?.sinFondo)return;d.usarSinFondo=!d.usarSinFondo;aplicarFondo(d);limitar(d);mostrarDiseno()});
@@ -79,7 +81,11 @@ function renderColores(){const box=$('#colores');box.innerHTML='';const lista=P(
   if(!lista.includes(st.color))st.color=lista.find(c=>c.nombre===st.color?.nombre)||lista[0];
   lista.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='sw'+(c===st.color?' on':'');b.style.background=c.hex;const n=c.codigo?`${c.nombre} (${c.codigo})`:c.nombre;b.title=n;b.setAttribute('aria-label',n);b.setAttribute('aria-pressed',c===st.color);
     b.onclick=()=>{st.color=c;renderColores()};box.appendChild(b)});
-  $('#colorNombre').textContent=st.color.codigo?`${st.color.nombre} · ${st.color.codigo}`:st.color.nombre;pintar()}
+  $('#colorNombre').textContent=st.color.codigo?`${st.color.nombre} · ${st.color.codigo}`:st.color.nombre;
+  // conjunto: segundo grupo de colores para el legging
+  const lb=$('#coloresLeg');$('#legBox').hidden=!esConjunto();lb.innerHTML='';if(esConjunto())PRENDAS.legging.colores.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='sw'+(c===st.colorLeg?' on':'');b.style.background=c.hex;b.title=c.nombre;b.setAttribute('aria-label',c.nombre);b.setAttribute('aria-pressed',c===st.colorLeg);
+    b.onclick=()=>{st.colorLeg=c;if(st.lado!=='legging')$('.ladoBtn[data-lado=legging]').click();renderColores()};lb.appendChild(b)});
+  $('#colorLegNombre').textContent=st.colorLeg.nombre;pintar()}
 $$('input[name=tec]').forEach(r=>r.addEventListener('change',()=>{st.tec=r.value;notaTec();renderColores();calc()}));
 // Cada camisa admite sus técnicas: camiseta = DTF o bordado, Waffit = solo bordado
 function syncTec(){const ts=P().tecnicas;if(!ts.includes(st.tec))st.tec=ts[0];
@@ -87,9 +93,10 @@ function syncTec(){const ts=P().tecnicas;if(!ts.includes(st.tec))st.tec=ts[0];
 function notaTec(){stage.classList.toggle('bordado',st.tec==='Bordado');
   $('#tecNota').textContent=st.tec==='Bordado'?`Bordado${st.prenda==='waffit'?' (la Waffit solo se borda)':''}: funciona mejor con logos de pocos colores y sin degradados. IMPRESA revisa tu logo antes de bordar.`:'DTF: impresión a todo color, perfecta para diseños grandes, fotos y degradados.'}
 $$('input[name=prenda]').forEach(r=>{r.checked=r.value===st.prenda;r.addEventListener('change',async()=>{st.prenda=r.value;await cargarPrenda(st.prenda);
-  $('.ladoBtn[data-lado=frente]').textContent=st.prenda==='waffit'?'Frente (pecho)':'Frente';
-  for(const l of ['frente','espalda'])if(st.lados[l])limitar(st.lados[l],l); // el diseño se ajusta a la nueva zona
-  $$('#audience option').forEach(o=>o.disabled=!P().tallasNino&&/Niñ/.test(o.value));if($('#audience option:checked').disabled)$('#audience').value='Hombre';
+  $('.ladoBtn[data-lado=frente]').textContent=st.prenda==='waffit'?'Frente (pecho)':esConjunto()?'Camiseta frente':'Frente';$('.ladoBtn[data-lado=espalda]').textContent=esConjunto()?'Camiseta espalda':'Espalda';
+  $('.ladoBtn[data-lado=legging]').hidden=!esConjunto();if(!esConjunto()&&st.lado==='legging')$('.ladoBtn[data-lado=frente]').click();
+  for(const l of LADOS())if(st.lados[l])limitar(st.lados[l],l); // el diseño se ajusta a la nueva zona
+  $$('#audience option').forEach(o=>o.disabled=(!P().tallasNino&&/Niñ/.test(o.value))||(!!P().soloMujer&&!/Mujer|Niña/.test(o.value)));if($('#audience option:checked').disabled)$('#audience').value=P().soloMujer?'Mujer':'Hombre';
   syncTec();renderTallas();renderColores();mostrarDiseno();calc()})});
 function renderTallas(){const prev=Object.fromEntries($$('.qty').map(q=>[q.dataset.talla,q.value]));const t=TALLAS[/Niñ/.test($('#audience').value)?'nino':'adulto'];
   $('#sizes').innerHTML=t.map(x=>`<label>${x}<input class="qty" type="number" min="0" max="999" inputmode="numeric" value="${prev[x]??(x==='M'||x==='8'?1:0)}" data-talla="${x}"></label>`).join('');
@@ -99,32 +106,32 @@ $('#config').addEventListener('submit',e=>e.preventDefault()); // Enter no recar
 
 /* ---------- Precio ---------- */
 const totalQty=()=>$$('.qty').reduce((a,x)=>a+Math.max(0,Math.floor(+x.value)||0),0);
-function unitario(){const pr=CFG.precios||{},base=pr[P().nombre]?.[st.tec]??350,dos=st.lados.frente&&st.lados.espalda,q=totalQty(),desc=(pr.descuentos||[]).find(d=>q>=d.desde)?.factor||1;return (base+(dos?pr.segundoLado??150:0))*desc}
-function calc(){const q=totalQty();$('#totalQty').textContent=q;$('#price').textContent=money(unitario()*q);$('#unit').textContent=`${money(unitario())} por camisa${st.lados.frente&&st.lados.espalda?' (frente y espalda)':''}`}
+function unitario(){const pr=CFG.precios||{},base=pr[P().nombre]?.[st.tec]??(esConjunto()?750:350),dos=st.lados.frente&&st.lados.espalda,q=totalQty(),desc=(pr.descuentos||[]).find(d=>q>=d.desde)?.factor||1;return (base+(dos?pr.segundoLado??150:0))*desc}
+function calc(){const q=totalQty();$('#totalQty').textContent=q;$('#price').textContent=money(unitario()*q);$('#unit').textContent=`${money(unitario())} por ${esConjunto()?'conjunto':'camisa'}${st.lados.frente&&st.lados.espalda?' (frente y espalda)':''}`}
 
 /* ---------- Vista para el pedido: camisa + diseños, en JPG pequeño ---------- */
-async function vista(){const lados=['frente','espalda'].filter(l=>st.lados[l]),c=document.createElement('canvas');c.width=600*Math.max(1,lados.length);c.height=600;const x=c.getContext('2d');x.fillStyle='#eef2f7';x.fillRect(0,0,c.width,c.height);
+async function vista(){const lados=LADOS().filter(l=>st.lados[l]||(esConjunto()&&l==='legging')),c=document.createElement('canvas');c.width=600*Math.max(1,lados.length);c.height=600;const x=c.getContext('2d');x.fillStyle='#eef2f7';x.fillRect(0,0,c.width,c.height);
   const tmp=document.createElement('canvas');tmp.width=tmp.height=800;const tx=tmp.getContext('2d');
-  for(const [i,l] of (lados.length?lados:['frente']).entries()){pintarCamisa(tx,st.prenda,l,st.color.hex,talla());x.drawImage(tmp,i*600,0,600,600);const d=st.lados[l];
-    if(d){const img=new Image();img.src=d.data;await img.decode();const w=d.cm*PCT_CM/100*600,h=w*d.ratio;x.drawImage(img,i*600+d.cx/100*600-w/2,d.cy/100*600-h/2,w,h)}}
+  for(const [i,l] of (lados.length?lados:['frente']).entries()){pintarCamisa(tx,st.prenda,l,colorDe(l).hex,talla());x.drawImage(tmp,i*600,0,600,600);const d=st.lados[l];
+    if(d){const img=await cargarImg(d.data);const w=d.cm*PCT_CM/100*600,h=w*d.ratio;x.drawImage(img,i*600+d.cx/100*600-w/2,d.cy/100*600-h/2,w,h)}}
   return c.toDataURL('image/jpeg',0.82)}
 
 $('#add').addEventListener('click',async()=>{const q=totalQty();if(q<1){alert('Indica cuántas camisas quieres en cada talla.');return}
-  if(!st.lados.frente&&!st.lados.espalda&&!confirm('No subiste ningún diseño. ¿Agregar la camisa igual y enviar el diseño por WhatsApp?'))return;
+  if(!LADOS().some(l=>st.lados[l])&&!confirm('No subiste ningún diseño. ¿Agregar la camisa igual y enviar el diseño por WhatsApp?'))return;
   const tallas=$$('.qty').filter(x=>+x.value>0).map(x=>`${x.dataset.talla}: ${Math.floor(+x.value)}`).join(', ');
-  const lados=['frente','espalda'].filter(l=>st.lados[l]).map(l=>`${l} ${st.lados[l].cm} cm${st.lados[l].codigo?` diseño ${st.lados[l].codigo}`:''}`).join(' + ')||'sin diseño subido';
-  const color=st.color.codigo?`${st.color.nombre} ${st.color.codigo}`:st.color.nombre,btn=$('#add'),txt=btn.textContent;
+  const lados=LADOS().filter(l=>st.lados[l]).map(l=>`${l} ${st.lados[l].cm} cm${st.lados[l].codigo?` diseño ${st.lados[l].codigo}`:''}`).join(' + ')||'sin diseño subido';
+  const color=(st.color.codigo?`${st.color.nombre} ${st.color.codigo}`:st.color.nombre)+(esConjunto()?` • legging ${st.colorLeg.nombre}`:''),btn=$('#add'),txt=btn.textContent;
   // el carrito vive en localStorage (≈5 MB): el diseño del cliente se sube ya y se guarda solo su enlace
   btn.disabled=true;btn.textContent='Guardando tu diseño…';
-  try{const archivos=[];for(const l of ['frente','espalda']){const d=st.lados[l];if(!d)continue;
+  try{const archivos=[];for(const l of LADOS()){const d=st.lados[l];if(!d)continue;
       if(d.codigo)archivos.push({lado:l,nombre:d.nombre,codigo:d.codigo});
       else archivos.push(sbReady()?{lado:l,nombre:d.nombre,url:await uploadFile(d)}:{lado:l,nombre:d.nombre,data:d.data})}
-    const ok=addItem({nombre:`${P().corto} Klasiko ${st.tec}`,detalle:`${$('#audience').value} • ${color} • ${lados} • tallas ${tallas}`,qty:q,precio:unitario(),archivos,vista:await vista()});
+    const ok=addItem({nombre:esConjunto()?`Conjunto camiseta Klasiko + legging ${st.tec}`:`${P().corto} Klasiko ${st.tec}`,detalle:`${$('#audience').value} • ${color} • ${lados} • tallas ${tallas}`,qty:q,precio:unitario(),archivos,vista:await vista()});
     if(ok)location.href='pedido.html'}
   catch(err){alert(`${err.message}. Revisa tu conexión e inténtalo de nuevo.`)}
   finally{btn.disabled=false;btn.textContent=txt}});
 
 renderTallas();colocarZona();
 cargarPrenda(st.prenda).then(()=>{$$('input[name=prenda]').find(r=>r.checked)?.dispatchEvent(new Event('change'))});
-cargarPrenda(st.prenda==='waffit'?'camiseta':'waffit'); // la otra en segundo plano para cambiar sin espera
+for(const id of ['camiseta','waffit','conjunto'])if(id!==st.prenda)cargarPrenda(id); // las otras en segundo plano para cambiar sin espera
 })();

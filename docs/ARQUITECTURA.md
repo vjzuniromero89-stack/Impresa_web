@@ -77,6 +77,13 @@ Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfiel
 
 ## Catálogo de diseños (2026-11-07)
 - Tabla disenos (codigo D001…, nombre, categoria, preview_url, archivo, orden, activo); página disenos.html con filtro por categoría; «Usar este diseño» → disena.html?diseno=…&dn=D007.
-- Archivo de impresión: bucket **privado** impresion (solo es_admin()), PNG sin fondo a 300 DPI (~30–35 cm), ampliado 4x con Real-ESRGAN ealesrgan-x4plus-anime (D:\herramientas\realesrgan). Copia local y scripts en D:\proyectos\impresa-disenos-impresion.
+- Archivo de impresión: bucket **privado** impresion (solo es_admin()), PNG sin fondo a 300 DPI (~30–35 cm), ampliado 4x con Real-ESRGAN 
+ealesrgan-x4plus-anime (D:\herramientas\realesrgan). Copia local y scripts en D:\proyectos\impresa-disenos-impresion.
 - Panel: pestaña Diseños (vista pública + archivo de impresión, descarga con enlace firmado de 10 min); en Pedidos, botón «⬇ D007 para imprimir».
 - Carrito: los diseños del cliente se suben a disenos al agregarlos (el carrito en localStorage solo guarda el enlace); los del catálogo solo guardan el código.
+
+## Conjunto (2026-11-07)
+- Prenda conjunto = camiseta + legging, se eligen juntos (mujer o niña), solo DTF. Cada pieza tiene su color; lados: camiseta frente, camiseta espalda y legging (logo en el muslo, zona 12 x 27 cm).
+- camisas.js: legging (foto en ssets/legging/, colores de muestra) y conjunto.piezas; piezaDe() y zonaDe() resuelven qué foto y zona usar.
+- Precio de muestra en config.js: Conjunto DTF C\$ 750 (+150 si la camiseta lleva frente y espalda).
+- Nota: img.decode() se quedaba colgado en algunos navegadores; se usa cargarImg() (onload).
