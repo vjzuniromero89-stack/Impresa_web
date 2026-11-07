@@ -79,23 +79,25 @@ function verColores(d){const cols=PRENDAS.camiseta.colores,ini=Math.max(0,cols.f
 const precioTaza=d=>d?.precio_taza!=null&&Number.isFinite(+d.precio_taza)?+d.precio_taza:(CFG.precios?.taza??200);
 // Los diseños panorámicos se detectan aunque un registro antiguo no tenga formato.
 function esEnvolventeTaza(img,d){return d.formato_taza==='envolvente'||img.naturalWidth/img.naturalHeight>1.6}
+const TAZA_CENTRO_A=(21-Math.PI*4.1)/2;
 function plantillaTaza(img,d){
   const c=document.createElement('canvas');c.width=2480;c.height=1122;const x=c.getContext('2d');
-  x.fillStyle='#ffffff';x.fillRect(0,0,c.width,c.height);
+  // Conservar transparencia: la cerámica aporta el blanco, no un rectángulo impreso.
   if(esEnvolventeTaza(img,d)){
     // Cubrir sin estirar: solo se recorta el mínimo sobrante de proporción.
     const k=Math.max(c.width/img.naturalWidth,c.height/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;
     x.drawImage(img,(c.width-w)/2,(c.height-h)/2,w,h);
   }else{
     // Motivos grandes, hasta el borde superior e inferior, a ambos lados.
-    const k=Math.min(1190/img.naturalWidth,1102/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;
-    for(const center of [620,1860])x.drawImage(img,center-w/2,(c.height-h)/2,w,h);
+    const centerA=TAZA_CENTRO_A*c.width/21,maxWidth=centerA*2-20;
+    const k=Math.min(maxWidth/img.naturalWidth,1102/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;
+    for(const center of [centerA,c.width-centerA])x.drawImage(img,center-w/2,(c.height-h)/2,w,h);
   }
   return c;
 }
 const _mt={},_tazaTexturas=new Map();
 function prepararTaza(d){const key=[d.preview_url,d.formato_taza].join('|');if(_tazaTexturas.has(key))return _tazaTexturas.get(key);
-  const pending=(async()=>{const img=d.preview_url?await cargarImg(d.preview_url):null,layer=document.createElement('canvas');layer.width=layer.height=800;return {wrap:img?plantillaTaza(img,d):null,center:img&&esEnvolventeTaza(img,d)?10.5:5.25,layer}})();
+  const pending=(async()=>{const img=d.preview_url?await cargarImg(d.preview_url):null,layer=document.createElement('canvas');layer.width=layer.height=800;return {wrap:img?plantillaTaza(img,d):null,center:img&&esEnvolventeTaza(img,d)?10.5:TAZA_CENTRO_A,layer}})();
   _tazaTexturas.set(key,pending);if(_tazaTexturas.size>8)_tazaTexturas.delete(_tazaTexturas.keys().next().value);
   pending.catch(()=>_tazaTexturas.delete(key));return pending}
 function dibujarTaza(x,texture,angle=0,offset=0){
