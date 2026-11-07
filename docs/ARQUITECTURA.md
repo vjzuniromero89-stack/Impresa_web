@@ -73,17 +73,17 @@ Local: `python -m http.server` (preview `impresa-web`, puerto 4393) contra el Su
 5. Pruebas en PC y móvil; publicación.
 
 ## Galería de ejemplos
-Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfield sobre verde y recortados (ssets/disenos-anime/); fotos de ejemplo en ssets/galeria/. «Pedir esta camisa» abre disena.html?prenda&color&lado&diseno; diseno solo acepta ssets/disenos-anime/*.png. No se hacen personajes de franquicias con derechos (p. ej. Dragon Ball).
+Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfield sobre verde y recortados (`assets/disenos-anime/`); fotos de ejemplo en `assets/galeria/`. «Pedir esta camisa» abre `disena.html?prenda&color&lado&diseno&dn`; `diseno` solo acepta `assets/disenos-anime/*.png` o el Storage público `media`. No se hacen personajes de franquicias con derechos (p. ej. Dragon Ball) ni logos de marcas (Adidas, Moschino…).
 
 ## Catálogo de diseños (2026-11-07)
-- Tabla disenos (codigo D001…, nombre, categoria, preview_url, archivo, orden, activo); página disenos.html con filtro por categoría; «Usar este diseño» → disena.html?diseno=…&dn=D007.
-- Archivo de impresión: bucket **privado** impresion (solo es_admin()), PNG sin fondo a 300 DPI (~30–35 cm), ampliado 4x con Real-ESRGAN 
-ealesrgan-x4plus-anime (D:\herramientas\realesrgan). Copia local y scripts en D:\proyectos\impresa-disenos-impresion.
+- Tabla `disenos` (codigo D001…, nombre, categoria, preview_url, archivo, orden, activo); página `disenos.html` con filtro por categoría; «Usar este diseño» → `disena.html?diseno=…&dn=D007`.
+- Archivo de impresión: bucket **privado** `impresion` (solo `es_admin()`), PNG sin fondo a 300 DPI (~30–35 cm), ampliado 4x con Real-ESRGAN `realesrgan-x4plus-anime` (`D:\herramientas\realesrgan`). Copia local y scripts en `D:\proyectos\impresa-disenos-impresion`.
 - Panel: pestaña Diseños (vista pública + archivo de impresión, descarga con enlace firmado de 10 min); en Pedidos, botón «⬇ D007 para imprimir».
-- Carrito: los diseños del cliente se suben a disenos al agregarlos (el carrito en localStorage solo guarda el enlace); los del catálogo solo guardan el código.
+- Carrito: los diseños del cliente se suben a `disenos` al agregarlos (el carrito en localStorage solo guarda el enlace); los del catálogo solo guardan el código.
+- El diseñador quita solo los fondos lisos (verde, blanco…) de la imagen del cliente y recorta; botón «Poner fondo» para deshacer.
 
 ## Conjunto (2026-11-07)
-- Prenda conjunto = camiseta + legging, se eligen juntos (mujer o niña), solo DTF. Cada pieza tiene su color; lados: camiseta frente, camiseta espalda y legging (logo en el muslo, zona 12 x 27 cm).
-- camisas.js: legging (foto en ssets/legging/, colores de muestra) y conjunto.piezas; piezaDe() y zonaDe() resuelven qué foto y zona usar.
-- Precio de muestra en config.js: Conjunto DTF C\$ 750 (+150 si la camiseta lleva frente y espalda).
-- Nota: img.decode() se quedaba colgado en algunos navegadores; se usa cargarImg() (onload).
+- Prenda `conjunto` = camiseta + legging, se eligen juntos (mujer o niña), solo DTF. Cada pieza tiene su color.
+- Vista de frente = foto de una modelo (`assets/modelo/`): camiseta arriba y legging abajo, generadas en verde y magenta y separadas en `mascara.png` (R camiseta, G legging, B luz) para teñir cada pieza; la espalda usa la camiseta sola. Zonas con su propia escala (`pct`, ~0.5 %/cm): pecho y muslo izquierdo. `piezaDe()`, `zonaDe()` y `pctDe()` en `camisas.js`.
+- Precio de muestra en `config.js`: Conjunto DTF C$ 750 (+150 si la camiseta lleva frente y espalda).
+- Nota: `img.decode()` se quedaba colgado en algunos navegadores; se usa `cargarImg()` (onload).
