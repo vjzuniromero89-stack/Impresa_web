@@ -19,7 +19,8 @@ function verGrande(lista,i=0){
     _vg.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')_vg._ir(-1);if(e.key==='ArrowRight')_vg._ir(1)});
     let x0=null;_vg.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
     _vg.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)_vg._ir(dx<0?1:-1);x0=null})}
-  const pintar=()=>{const it=lista[i],img=_vg.querySelector('img'),a=_vg.querySelector('.vgBtn');img.src=it.src;img.alt=it.titulo||'';
+  const pintar=()=>{const it=lista[i],img=_vg.querySelector('img'),a=_vg.querySelector('.vgBtn'),k=i;
+    if(typeof it.src==='function'){img.style.opacity=.35;Promise.resolve(it.src()).then(u=>{if(k===i){img.src=u;img.style.opacity=1}})}else{img.src=it.src;img.style.opacity=1}img.alt=it.titulo||'';
     _vg.querySelector('figcaption b').textContent=it.titulo||'';_vg.querySelector('figcaption span').textContent=it.sub||'';
     _vg.classList.toggle('foto',!it.oscuro&&it.oscuro!==undefined);_vg.querySelector('.vgFondo').hidden=it.oscuro===false;
     a.hidden=!it.accion;if(it.accion){a.textContent=it.accion.texto;if(it.accion.href){a.href=it.accion.href;a.onclick=null}else{a.removeAttribute('href');a.onclick=()=>{_vg.close();it.accion.onclick()}}}
@@ -46,17 +47,24 @@ document.addEventListener('click',e=>{const b=e.target.closest('.cart');if(!b)re
   if(addItem({nombre:b.dataset.name,detalle:(b.dataset.detail||'')+(t?` • talla ${t}`:''),qty:1,precio:+b.dataset.price,vista:b.dataset.foto||undefined}))$('#cartStatus').innerHTML=`Agregado a tu pedido${t?` (talla ${esc(t)})`:''}. <a href="pedido.html"><u>Ver mi pedido</u></a>`});
 const TALLAS_TIENDA=['XS','S','M','L','XL','2XL','3XL'];
 const productos=sbGet('productos?select=nombre,detalle,precio,foto_url,enlace&activo=eq.true&order=orden,created_at');
+// Vista en grande de un producto: las flechas recorren los 17 colores de camiseta con el mismo diseño
+async function verColores(p){if(!p.enlace||typeof PRENDAS==='undefined'){verGrande([{src:p.foto_url,titulo:p.nombre,sub:`${p.detalle} · ${money(p.precio)}`,oscuro:false}],0);return}
+  const q=new URL(p.enlace,location.href).searchParams,cols=PRENDAS.camiseta.colores,ini=Math.max(0,cols.findIndex(c=>c.nombre===q.get('color')));
+  const prep=Promise.all([cargarPrenda('camiseta'),cargarImg(q.get('diseno'))]),cache={};
+  const dibujar=async c=>{const [,img]=await prep,t=document.createElement('canvas'),o=document.createElement('canvas');t.width=t.height=o.width=o.height=800;pintarCamisa(t.getContext('2d'),'camiseta','frente',c.hex,'M');
+    const x=o.getContext('2d'),g=x.createRadialGradient(400,320,0,400,320,560);g.addColorStop(0,'#a9b4c1');g.addColorStop(.7,'#8692a1');g.addColorStop(1,'#727e8d');x.fillStyle=g;x.fillRect(0,0,800,800);x.drawImage(t,0,0);
+    const w=28*8.1,h=w*img.naturalHeight/img.naturalWidth;x.drawImage(img,400-w/2,148,w,h);return o.toDataURL('image/jpeg',.9)}; // mismo tamaño y lugar que las fotos de la tienda
+  verGrande(cols.map(c=>{q.set('color',c.nombre);return {src:()=>cache[c.nombre]??=dibujar(c),titulo:p.nombre,sub:`Camiseta ${c.nombre.toLowerCase()} · DTF · ${money(p.precio)} · ‹ › otros colores`,oscuro:false,accion:{texto:'Pedir en este color',href:'disena.html?'+q.toString()}}}),ini)}
 const aGrande=rows=>rows.map(p=>({src:p.foto_url,titulo:p.nombre,sub:`${p.detalle} · ${money(p.precio)}`,oscuro:false,accion:p.enlace?{texto:'Cambiar color o diseño',href:p.enlace}:{texto:'Ver en la tienda',href:'tienda.html'}}));
 (async()=>{const box=$('.realProducts');if(!box)return;const rows=await productos;if(!rows?.length){box.innerHTML='<p class="status">Pronto agregaremos productos. Mientras tanto, <a href="disena.html"><u>diseña tu camisa</u></a>.</p>';return}
   box.innerHTML=rows.map((p,i)=>`<article><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(p.nombre)} en grande"><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"></button><h3>${esc(p.nombre)}</h3><p>${esc(p.detalle)}</p><strong>${money(p.precio)}</strong>
     <label class="tallaLbl">Talla <select class="tallaSel">${TALLAS_TIENDA.map(t=>`<option${t==='M'?' selected':''}>${t}</option>`).join('')}</select></label>
     <button class="btn cart" data-name="${esc(p.nombre)}" data-detail="${esc(p.detalle)}" data-price="${+p.precio}" data-foto="${esc(p.foto_url)}">Agregar al carrito</button>${p.enlace?`<a class="btn ghost cambiar" href="${esc(p.enlace)}">Cambiar color o diseño</a>`:''}</article>`).join('');
-  const lista=aGrande(rows);lista.forEach(it=>it.accion=it.accion.href==='tienda.html'?null:it.accion);
-  box.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verGrande(lista,+z.dataset.i)})})();
+  box.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verColores(rows[+z.dataset.i])})})();
 /* ---------- Carrusel de la tienda en el Inicio ---------- */
 (async()=>{const box=$('#carrusel');if(!box)return;const rows=await productos;if(!rows?.length){box.closest('section').hidden=true;return}
   const pista=box.querySelector('.pista');pista.innerHTML=rows.map((p,i)=>`<article class="slide"><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(p.nombre)} en grande"><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"></button><b>${esc(p.nombre)}</b><span>${esc(p.detalle.split(' • ')[0])}</span><strong>${money(p.precio)}</strong></article>`).join('');
-  const lista=aGrande(rows);pista.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verGrande(lista,+z.dataset.i)});
+  pista.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verColores(rows[+z.dataset.i])});
   const paso=()=>pista.querySelector('.slide').getBoundingClientRect().width+16;
   const mover=d=>{const fin=pista.scrollLeft+d*paso();pista.scrollTo({left:fin>pista.scrollWidth-pista.clientWidth+5?0:fin<-5?pista.scrollWidth:fin,behavior:'smooth'})};
   box.querySelector('.cPrev').onclick=()=>mover(-1);box.querySelector('.cSig').onclick=()=>mover(1);

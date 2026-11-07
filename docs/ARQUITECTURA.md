@@ -93,3 +93,11 @@ Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfiel
 - Giro 360°: una foto por ángulo (`giro` en `PRENDAS`, cada 45°; camiseta y modelo 8, Waffit 6 — faltan 45° y 315°). Arrastrar pasa por las fotos; de 90° a 270° se edita la espalda. En diagonal el diseño se encoge y se corre como sobre un cilindro (`eje` = ancho de la prenda en cada vista); de lado no se ve. El diseño solo se mueve en frente/espalda.
 - Fuentes y scripts del giro: `D:\proyectos\impresa-disenos-impresion\giro360` (`procesar.py` corta y alinea; `recorte_brillo.py` para fondos negros con halo).
 - Conjunto: botón «Poner también en el legging» copia el diseño al muslo.
+
+## Tienda, Inicio y nombre en la espalda (2026-11-07)
+- Galería eliminada: sus 16 camisas son productos en la tabla `productos` (columna `enlace` → abre el diseñador con ese diseño y color). Se borraron los 3 productos viejos.
+- Tienda: talla por producto; clic en la foto → `verGrande()` con las flechas recorriendo los 17 colores de camiseta del mismo diseño (dibujado al momento con `camisas.js`), botón «Pedir en este color».
+- Inicio: carrusel `#carrusel` con los productos de la tienda (avanza cada 4 s, se detiene al tocarlo, respeta «reducir movimiento»).
+- `verGrande(lista, i)` (app.js): vista en grande compartida por Diseños, la ventana de diseños del diseñador y la tienda; `src` puede ser una función.
+- Diseñador, paso 05: nombre (y número) en la espalda con 6 letras de Google Fonts (Bebas Neue, Graduate, Bungee, Permanent Marker, Pacifico, Great Vibes), 7 colores y contorno. Se dibuja en canvas; al pedir se sube un PNG a 300 DPI. Cuenta como espalda para el precio.
+- Fotos de productos con fondo gris azulado (igual que el diseñador) para que la camiseta blanca se vea; `?v=2` en `foto_url` evita la caché vieja.

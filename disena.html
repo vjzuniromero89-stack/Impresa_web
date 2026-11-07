@@ -4,6 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#061426">
 <title>Diseña tu camisa | IMPRESA</title>
 <meta name="description" content="Diseña tu camiseta con DTF o sublimación: elige el color, sube tu diseño y mira tu precio al instante.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee&family=Graduate&family=Great+Vibes&family=Pacifico&family=Permanent+Marker&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 <style>
 .dz{max-width:1180px;margin:auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:24px;align-items:start}
@@ -42,6 +44,15 @@
 .tec b{display:block;font-size:16px;margin-bottom:4px}
 .tec span{font-size:12px;color:#a9c5db;line-height:1.4}
 .tec.off{opacity:.4;cursor:not-allowed}
+.nomBox{display:grid;gap:12px;background:#0d2a47;border:1px solid #24577f;border-radius:12px;padding:14px}
+.nomFila{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.nomFila label{flex:1;min-width:140px}.nomFila .num{flex:0 0 90px;min-width:0}
+.fuentes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.fuente{background:#102b47;border:1.5px solid #24577f;border-radius:10px;color:#fff;padding:8px 6px;cursor:pointer;display:grid;gap:2px;text-align:center}
+.fuente b{font-size:22px;line-height:1.15;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fuente small{font-size:11px;color:#9fc0da}
+.fuente[aria-checked=true]{border-color:#29a8ff;background:#0f3558;box-shadow:0 0 0 3px #29a8ff33}
+.nomCol{display:grid;gap:8px;font-size:13px}#nomColores{display:flex;gap:8px;flex-wrap:wrap}
+.chk2{display:flex;gap:8px;align-items:center;font-size:13px}.chk2 input{width:auto;margin:0}
+@media(max-width:520px){.fuentes{grid-template-columns:repeat(2,1fr)}}
 .prendas{grid-template-columns:repeat(3,1fr)}@media(max-width:520px){.prendas{grid-template-columns:1fr}}
 .tec:has(input:checked){border-color:#29a8ff;background:#0f3558;box-shadow:0 0 0 3px #29a8ff33}
 .tec:has(input:focus-visible){outline:2px solid #fff}
@@ -67,7 +78,7 @@
 <div class="dz">
   <div class="dzPrev">
     <div class="ladoTabs"><button type="button" class="ladoBtn active" data-lado="frente">Frente</button><button type="button" class="ladoBtn" data-lado="espalda">Espalda</button><button type="button" class="ladoBtn" data-lado="legging" hidden>Legging (muslo)</button></div>
-    <div id="stage"><div id="giro"><canvas id="shirt" width="800" height="800" role="img" aria-label="Vista de la camiseta"></canvas><div id="zona" class="vacia"></div><img id="designImg2" alt="" hidden draggable="false" style="position:absolute;pointer-events:none;max-width:none"><img id="designImg" alt="Tu diseño" hidden draggable="false"></div></div>
+    <div id="stage"><div id="giro"><canvas id="shirt" width="800" height="800" role="img" aria-label="Vista de la camiseta"></canvas><div id="zona" class="vacia"></div><img id="designImg2" alt="" hidden draggable="false" style="position:absolute;pointer-events:none;max-width:none"><img id="nameImg" alt="" hidden draggable="false" style="position:absolute;pointer-events:none;max-width:none"><img id="designImg" alt="Tu diseño" hidden draggable="false"></div></div>
     <div id="sizeBox" hidden><label for="cm" style="flex-basis:100%">Tamaño: <span id="cmTxt"></span></label><input id="cm" type="range" min="5" max="30" step="1"><button type="button" class="btn ghost" id="centrar">Centrar</button><button type="button" class="btn ghost" id="fondoBtn" hidden>Poner fondo</button><button type="button" class="btn ghost" id="quitar" hidden>Quitar</button><button type="button" class="btn" id="legCopia" hidden>Poner también en el legging</button></div>
     <p class="hint">Arrastra la camisa hacia los lados para girarla 360°. Arrastra tu diseño para moverlo. La línea punteada es el área que se puede imprimir.</p>
   </div>
@@ -96,7 +107,15 @@
     <button type="button" class="verDisenos" id="verDisenos">Elige uno de nuestros diseños</button>
     <label class="upload2">＋ O sube tu logo o imagen<input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="tip">Si tu imagen tiene fondo de un solo color, lo quitamos solos. Máximo 8 MB.</p></label>
 
-    <div class="step"><span>05</span><b>Cantidades por talla</b></div>
+    <div class="step"><span>05</span><b>Tu nombre en la espalda <small style="font-weight:400;color:#9fc0da">(opcional)</small></b></div>
+    <div class="nomBox">
+      <div class="nomFila"><label>Nombre<input id="nomTxt" maxlength="16" placeholder="Ej. VALERIA" autocomplete="off"></label><label class="num">Número<input id="nomNum" maxlength="2" inputmode="numeric" placeholder="10" autocomplete="off"></label></div>
+      <div class="fuentes" id="fuentes" role="radiogroup" aria-label="Tipo de letra"></div>
+      <div class="nomCol"><span>Color de las letras: <b id="nomColNombre"></b></span><div id="nomColores" role="radiogroup" aria-label="Color de las letras"></div></div>
+      <div class="nomFila"><label class="chk2"><input type="checkbox" id="nomBorde" checked> Contorno para que resalte</label><button type="button" class="btn ghost" id="nomQuitar" hidden>Quitar nombre</button></div>
+    </div>
+
+    <div class="step"><span>06</span><b>Cantidades por talla</b></div>
     <label>¿Para quién?<select id="audience"><option>Hombre</option><option>Mujer</option><option>Niño</option><option>Niña</option></select></label>
     <div class="sizes" id="sizes"></div>
     <p style="margin:0">Total: <strong id="totalQty">1</strong> camisas</p>

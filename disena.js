@@ -28,10 +28,10 @@ function colocarImg(img,d,lado){const cara=lado==='espalda'?180:0,t=((st.vista-c
   const w=d.cm*pct(lado),h=w*d.ratio,cx=eje-r*Math.sin(t)+(d.cx-eje0)*c;
   Object.assign(img.style,{width:w*c+'%',height:h+'%',left:(cx-w*c/2)+'%',top:(d.cy-h/2)+'%'})}
 const deFrente=()=>st.vista===0||st.vista===180;
-function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();zonaEl.hidden=!deFrente();dImg.style.pointerEvents=deFrente()?'':'none';
+function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();const ni=$('#nameImg');if(st.nombreImg)colocarImg(ni,st.nombreImg,'espalda');else ni.hidden=true;zonaEl.hidden=!deFrente();dImg.style.pointerEvents=deFrente()?'':'none';
   const otro=juntos(st.lado).find(l=>l!==st.lado),od=otro&&st.lados[otro],oi=$('#designImg2');oi.hidden=!od;
   if(od)colocarImg(oi,od,otro);$('#ladoNombre').textContent=st.lado==='legging'?'el legging (muslo)':st.lado==='frente'?(st.prenda==='waffit'?'el pecho':esConjunto()?'el frente de la camiseta':'el frente'):'la espalda';
-  $('#sizeBox').hidden=!d;$('#quitar').hidden=!d;zonaEl.classList.toggle('vacia',!d);
+  $('#sizeBox').hidden=!d;$('#quitar').hidden=!d;zonaEl.classList.toggle('vacia',!d&&!(st.lado==='espalda'&&st.nombreImg));
   if(!d){dImg.hidden=true;return}
   colocarImg(dImg,d,st.lado);$('#legCopia').hidden=!esConjunto()||st.lado==='legging'||!!st.lados.legging;
   $('#fondoBtn').hidden=!d.sinFondo;$('#fondoBtn').textContent=d.usarSinFondo?'Poner fondo':'Quitar fondo';
@@ -137,36 +137,72 @@ $$('input[name=prenda]').forEach(r=>{r.checked=r.value===st.prenda;r.addEventLis
   $('.ladoBtn[data-lado=legging]').hidden=!esConjunto();if(!esConjunto()&&st.lado==='legging')$('.ladoBtn[data-lado=frente]').click();
   for(const l of LADOS())if(st.lados[l])limitar(st.lados[l],l); // el diseño se ajusta a la nueva zona
   $$('#audience option').forEach(o=>o.disabled=(!P().tallasNino&&/Niñ/.test(o.value))||(!!P().soloMujer&&!/Mujer|Niña/.test(o.value)));if($('#audience option:checked').disabled)$('#audience').value=P().soloMujer?'Mujer':'Hombre';
-  syncTec();renderTallas();renderColores();mostrarDiseno();calc()})});
+  syncTec();renderTallas();renderColores();actualizarNombre(false);mostrarDiseno();calc()})});
 function renderTallas(){const prev=Object.fromEntries($$('.qty').map(q=>[q.dataset.talla,q.value]));const t=TALLAS[/Niñ/.test($('#audience').value)?'nino':'adulto'];
   $('#sizes').innerHTML=t.map(x=>`<label>${x}<input class="qty" type="number" min="0" max="999" inputmode="numeric" value="${prev[x]??(x==='M'||x==='8'?1:0)}" data-talla="${x}"></label>`).join('');
   $$('.qty').forEach(q=>q.addEventListener('input',()=>{calc();pintar()}));calc();pintar()} // la etiqueta muestra la primera talla elegida
 $('#audience').addEventListener('change',renderTallas);
 $('#config').addEventListener('submit',e=>e.preventDefault()); // Enter no recarga ni pierde el diseño
 
+/* ---------- Nombre en la espalda ---------- */
+const FUENTES=[['Bebas Neue','Deportiva'],['Graduate','Universitaria'],['Bungee','Urbana'],['Permanent Marker','Grafiti'],['Pacifico','Cursiva'],['Great Vibes','Elegante']];
+const COLS_NOM=[['Blanco','#ffffff'],['Negro','#111111'],['Dorado','#d4a72c'],['Plateado','#c3c8cf'],['Rojo','#d01c22'],['Azul royal','#1f48c4'],['Rosado','#f08cb4']];
+st.nom={texto:'',numero:'',fuente:FUENTES[0][0],color:'#ffffff',borde:true};st.nombreImg=null;
+// Dibuja nombre (y número debajo) en un lienzo transparente recortado; ancho en px
+function dibujarNombre(ancho=900){const {texto,numero,fuente,color,borde}=st.nom,F=200,c=document.createElement('canvas'),x=c.getContext('2d');
+  const fNom=`${F}px "${fuente}"`,fNum=`${F*1.7}px "${fuente}"`;x.font=fNom;const wN=texto?x.measureText(texto).width:0;x.font=fNum;const wM=numero?x.measureText(numero).width:0;
+  const lw=borde?F*0.14:0,pad=F*0.35+lw,W=Math.max(wN,wM)+pad*2,H=(texto?F*1.25:0)+(numero?F*1.75:0)+pad*2;c.width=Math.ceil(W);c.height=Math.ceil(H);
+  const oscuro=(parseInt(color.slice(1,3),16)*0.299+parseInt(color.slice(3,5),16)*0.587+parseInt(color.slice(5,7),16)*0.114)<140;
+  x.textAlign='center';x.textBaseline='middle';x.lineJoin='round';x.lineWidth=lw;x.strokeStyle=oscuro?'#ffffff':'#111111';x.fillStyle=color;let y=pad;
+  for(const [t,f,alto] of [[texto,fNom,F*1.25],[numero,fNum,F*1.75]]){if(!t)continue;x.font=f;if(lw)x.strokeText(t,W/2,y+alto/2);x.fillText(t,W/2,y+alto/2);y+=alto}
+  // recorte a lo dibujado y escala al ancho pedido
+  const d=x.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=0,y1=0;for(let yy=0;yy<c.height;yy++)for(let xx=0;xx<c.width;xx++)if(d[(yy*c.width+xx)*4+3]>20){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}
+  const o=document.createElement('canvas'),cw=x1-x0+1,ch=y1-y0+1;o.width=ancho;o.height=Math.max(1,Math.round(ancho*ch/cw));o.getContext('2d').drawImage(c,x0,y0,cw,ch,0,0,o.width,o.height);return o}
+let tNom=0;
+async function actualizarNombre(girar=true){const n=st.nom;const raw=$('#nomTxt').value.trim();n.texto=(['Pacifico','Great Vibes'].includes(n.fuente)?raw:raw.toUpperCase()).replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ0-9 .'-]/g,''); // cursivas en minúscula se leen mejorn.numero=$('#nomNum').value.replace(/\D/g,'').slice(0,2);n.borde=$('#nomBorde').checked;
+  $('#nomQuitar').hidden=!(n.texto||n.numero);if(!n.texto&&!n.numero){st.nombreImg=null;mostrarDiseno();calc();return}
+  try{await document.fonts.load(`200px "${n.fuente}"`,n.texto+n.numero)}catch{}
+  const cv=dibujarNombre(900),ratio=cv.height/cv.width,z=zonaDe(st.prenda,'espalda'),k=pct('espalda');
+  // alto ≈ 7 cm por la línea del nombre (+12 cm si lleva número), sin pasar el ancho de la zona ni 28 cm
+  const altoCm=(n.texto?7:0)+(n.numero?12:0),cm=Math.max(6,Math.min(28,Math.floor(z.w/k),Math.round(altoCm/ratio)));
+  st.nombreImg={data:cv.toDataURL('image/png'),ratio,cm,cx:z.x+z.w/2,cy:z.y+cm*k*ratio/2+1};
+  if(girar&&st.lado!=='espalda')$('.ladoBtn[data-lado=espalda]').click();mostrarDiseno();calc()}
+const nomCambio=()=>{clearTimeout(tNom);tNom=setTimeout(actualizarNombre,180)};
+['nomTxt','nomNum'].forEach(id=>$('#'+id).addEventListener('input',nomCambio));$('#nomBorde').addEventListener('change',()=>actualizarNombre());
+$('#nomQuitar').addEventListener('click',()=>{$('#nomTxt').value='';$('#nomNum').value='';actualizarNombre(false)});
+$('#fuentes').innerHTML=FUENTES.map(([f,l])=>`<button type="button" class="fuente" role="radio" aria-checked="${f===st.nom.fuente}" data-f="${f}"><b style="font-family:'${f}',sans-serif">NOMBRE</b><small>${l}</small></button>`).join('');
+$$('.fuente').forEach(b=>b.onclick=()=>{st.nom.fuente=b.dataset.f;$$('.fuente').forEach(x=>x.setAttribute('aria-checked',x===b));actualizarNombre()});
+function pintarColNom(){$('#nomColores').innerHTML=COLS_NOM.map(([n,h])=>`<button type="button" class="sw${h===st.nom.color?' on':''}" role="radio" aria-checked="${h===st.nom.color}" aria-label="${n}" title="${n}" style="background:${h}" data-h="${h}"></button>`).join('');
+  $('#nomColNombre').textContent=COLS_NOM.find(c=>c[1]===st.nom.color)[0];$$('#nomColores .sw').forEach(b=>b.onclick=()=>{st.nom.color=b.dataset.h;pintarColNom();actualizarNombre()})}
+pintarColNom();
+
 /* ---------- Precio ---------- */
 const totalQty=()=>$$('.qty').reduce((a,x)=>a+Math.max(0,Math.floor(+x.value)||0),0);
-function unitario(){const pr=CFG.precios||{},base=pr[P().nombre]?.[st.tec]??(esConjunto()?750:350),dos=st.lados.frente&&st.lados.espalda,q=totalQty(),desc=(pr.descuentos||[]).find(d=>q>=d.desde)?.factor||1;return (base+(dos?pr.segundoLado??150:0))*desc}
-function calc(){const q=totalQty();$('#totalQty').textContent=q;$('#price').textContent=money(unitario()*q);$('#unit').textContent=`${money(unitario())} por ${esConjunto()?'conjunto':'camisa'}${st.lados.frente&&st.lados.espalda?' (frente y espalda)':''}`}
+function unitario(){const pr=CFG.precios||{},base=pr[P().nombre]?.[st.tec]??(esConjunto()?750:350),dos=st.lados.frente&&(st.lados.espalda||st.nombreImg),q=totalQty(),desc=(pr.descuentos||[]).find(d=>q>=d.desde)?.factor||1;return (base+(dos?pr.segundoLado??150:0))*desc}
+function calc(){const q=totalQty();$('#totalQty').textContent=q;$('#price').textContent=money(unitario()*q);$('#unit').textContent=`${money(unitario())} por ${esConjunto()?'conjunto':'camisa'}${st.lados.frente&&(st.lados.espalda||st.nombreImg)?' (frente y espalda)':''}`}
 
 /* ---------- Vista para el pedido: camisa + diseños, en JPG pequeño ---------- */
-async function vista(){const lados=esConjunto()?['frente',...(st.lados.espalda?['espalda']:[])]:LADOS().filter(l=>st.lados[l]),c=document.createElement('canvas');c.width=600*Math.max(1,lados.length);c.height=600;const x=c.getContext('2d');x.fillStyle='#eef2f7';x.fillRect(0,0,c.width,c.height);
+async function vista(){const con=l=>st.lados[l]||(l==='espalda'&&st.nombreImg),lados=esConjunto()?['frente',...(con('espalda')?['espalda']:[])]:LADOS().filter(con),c=document.createElement('canvas');c.width=600*Math.max(1,lados.length);c.height=600;const x=c.getContext('2d');x.fillStyle='#eef2f7';x.fillRect(0,0,c.width,c.height);
   const tmp=document.createElement('canvas');tmp.width=tmp.height=800;const tx=tmp.getContext('2d');
   for(const [i,l] of (lados.length?lados:['frente']).entries()){pintarCamisa(tx,st.prenda,l,colorDe(l).hex,talla(),st.colorLeg.hex);x.drawImage(tmp,i*600,0,600,600);
-    for(const ll of juntos(l)){const d=st.lados[ll];if(!d)continue;const img=await cargarImg(d.data);const w=d.cm*pct(ll)/100*600,h=w*d.ratio;x.drawImage(img,i*600+d.cx/100*600-w/2,d.cy/100*600-h/2,w,h)}}
+    for(const ll of juntos(l)){const d=st.lados[ll];if(!d)continue;const img=await cargarImg(d.data);const w=d.cm*pct(ll)/100*600,h=w*d.ratio;x.drawImage(img,i*600+d.cx/100*600-w/2,d.cy/100*600-h/2,w,h)}
+    if(l==='espalda'&&st.nombreImg){const n=st.nombreImg,img=await cargarImg(n.data),w=n.cm*pct('espalda')/100*600,h=w*n.ratio;x.drawImage(img,i*600+n.cx/100*600-w/2,n.cy/100*600-h/2,w,h)}}
   return c.toDataURL('image/jpeg',0.82)}
 
 $('#add').addEventListener('click',async()=>{const q=totalQty();if(q<1){alert('Indica cuántas camisas quieres en cada talla.');return}
-  if(!LADOS().some(l=>st.lados[l])&&!confirm('No subiste ningún diseño. ¿Agregar la camisa igual y enviar el diseño por WhatsApp?'))return;
+  if(!LADOS().some(l=>st.lados[l])&&!st.nombreImg&&!confirm('No subiste ningún diseño. ¿Agregar la camisa igual y enviar el diseño por WhatsApp?'))return;
   const tallas=$$('.qty').filter(x=>+x.value>0).map(x=>`${x.dataset.talla}: ${Math.floor(+x.value)}`).join(', ');
   const lados=LADOS().filter(l=>st.lados[l]).map(l=>`${l} ${st.lados[l].cm} cm${st.lados[l].codigo?` diseño ${st.lados[l].codigo}`:''}`).join(' + ')||'sin diseño subido';
+  const nom=st.nombreImg?` • nombre en la espalda «${st.nom.texto}»${st.nom.numero?` #${st.nom.numero}`:''} (letra ${FUENTES.find(f=>f[0]===st.nom.fuente)[1]}, ${COLS_NOM.find(c=>c[1]===st.nom.color)[0]}${st.nom.borde?', con contorno':''}, ${st.nombreImg.cm} cm)`:'';
   const color=(st.color.codigo?`${st.color.nombre} ${st.color.codigo}`:st.color.nombre)+(esConjunto()?` • legging ${st.colorLeg.nombre}`:''),btn=$('#add'),txt=btn.textContent;
   // el carrito vive en localStorage (≈5 MB): el diseño del cliente se sube ya y se guarda solo su enlace
   btn.disabled=true;btn.textContent='Guardando tu diseño…';
   try{const archivos=[];for(const l of LADOS()){const d=st.lados[l];if(!d)continue;
       if(d.codigo)archivos.push({lado:l,nombre:d.nombre,codigo:d.codigo});
       else archivos.push(sbReady()?{lado:l,nombre:d.nombre,url:await uploadFile(d)}:{lado:l,nombre:d.nombre,data:d.data})}
-    const ok=addItem({nombre:esConjunto()?`Conjunto camiseta Klasiko + legging ${st.tec}`:`${P().corto} Klasiko ${st.tec}`,detalle:`${$('#audience').value} • ${color} • ${lados} • tallas ${tallas}`,qty:q,precio:unitario(),archivos,vista:await vista()});
+    // nombre para imprimir: PNG transparente a 300 DPI del ancho elegido
+    if(st.nombreImg){const alta=dibujarNombre(Math.round(st.nombreImg.cm*118)).toDataURL('image/png');archivos.push(sbReady()?{lado:'nombre espalda',nombre:'nombre-espalda.png',url:await uploadFile({nombre:'nombre-espalda.png',data:alta})}:{lado:'nombre espalda',nombre:'nombre-espalda.png',data:alta})}
+    const ok=addItem({nombre:esConjunto()?`Conjunto camiseta Klasiko + legging ${st.tec}`:`${P().corto} Klasiko ${st.tec}`,detalle:`${$('#audience').value} • ${color} • ${lados}${nom} • tallas ${tallas}`,qty:q,precio:unitario(),archivos,vista:await vista()});
     if(ok)location.href='pedido.html'}
   catch(err){alert(`${err.message}. Revisa tu conexión e inténtalo de nuevo.`)}
   finally{btn.disabled=false;btn.textContent=txt}});
