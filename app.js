@@ -93,33 +93,63 @@ function plantillaTaza(img,d){
   }
   return c;
 }
-const _mt={};
-function mockupTaza(d,opciones={}){const key=[d.codigo,d.preview_url,d.formato_taza,opciones.offset||0].join('|');return _mt[key]??=(async()=>{const img=d.preview_url?await cargarImg(d.preview_url):null,o=document.createElement('canvas');o.width=o.height=800;const x=o.getContext('2d');
-  const g=x.createRadialGradient(400,320,0,400,320,560);g.addColorStop(0,'#a9b4c1');g.addColorStop(.7,'#8692a1');g.addColorStop(1,'#727e8d');x.fillStyle=g;x.fillRect(0,0,800,800);
-  const L=215,R=545,T=215,B=615,cx=(L+R)/2,rx=(R-L)/2,ry=26,px=(B-T)/9.5,Rcm=4.1;
+const _mt={},_tazaTexturas=new Map();
+function prepararTaza(d){const key=[d.preview_url,d.formato_taza].join('|');if(_tazaTexturas.has(key))return _tazaTexturas.get(key);
+  const pending=(async()=>{const img=d.preview_url?await cargarImg(d.preview_url):null,layer=document.createElement('canvas');layer.width=layer.height=800;return {wrap:img?plantillaTaza(img,d):null,center:img&&esEnvolventeTaza(img,d)?10.5:5.25,layer}})();
+  _tazaTexturas.set(key,pending);if(_tazaTexturas.size>8)_tazaTexturas.delete(_tazaTexturas.keys().next().value);
+  pending.catch(()=>_tazaTexturas.delete(key));return pending}
+function dibujarTaza(x,texture,angle=0,offset=0){
+  const L=215,R=545,T=215,B=615,cx=380,rx=165,ry=26,Rcm=4.1,circ=2*Math.PI*Rcm,rad=angle*Math.PI/180;
+  x.clearRect(0,0,800,800);const g=x.createRadialGradient(400,320,0,400,320,560);g.addColorStop(0,'#a9b4c1');g.addColorStop(.7,'#8692a1');g.addColorStop(1,'#727e8d');x.fillStyle=g;x.fillRect(0,0,800,800);
   x.save();x.filter='blur(14px)';x.fillStyle='rgba(0,0,0,.3)';x.beginPath();x.ellipse(cx+35,B+10,rx+70,ry+8,0,0,7);x.fill();x.restore();
-  x.lineCap='round';x.strokeStyle='#c3cbd3';x.lineWidth=40;x.beginPath();x.ellipse(R-6,415,94,114,0,-Math.PI/2+.22,Math.PI/2-.22);x.stroke();
-  x.strokeStyle='#eef1f4';x.lineWidth=16;x.beginPath();x.ellipse(R-12,410,94,110,0,-Math.PI/2+.45,Math.PI/2-.6);x.stroke();
+  const asa=()=>{const c=Math.cos(rad),w=Math.max(2,94*Math.abs(c)),ax=cx+(rx-6)*c;
+    x.save();x.lineCap='round';x.strokeStyle='#c3cbd3';x.lineWidth=24+16*Math.abs(c);x.beginPath();x.ellipse(ax,415,w,114,0,c>=0?-Math.PI/2+.22:Math.PI/2+.22,c>=0?Math.PI/2-.22:Math.PI*1.5-.22);x.stroke();
+    x.strokeStyle='#eef1f4';x.lineWidth=8+8*Math.abs(c);x.beginPath();x.ellipse(ax-6*c,410,w,110,0,c>=0?-Math.PI/2+.45:Math.PI/2+.45,c>=0?Math.PI/2-.6:Math.PI*1.5-.6);x.stroke();x.restore()};
+  if(Math.sin(rad)<=0)asa();
   const cuerpo=()=>{x.beginPath();x.moveTo(L,T);x.lineTo(L,B);x.ellipse(cx,B,rx,ry,0,Math.PI,0,true);x.lineTo(R,T);x.ellipse(cx,T,rx,ry,0,0,Math.PI);x.closePath()};
-  const lg=x.createLinearGradient(L,0,R,0);[[0,'#98a1ab'],[.12,'#d9dee3'],[.3,'#ffffff'],[.45,'#fbfcfd'],[.75,'#e3e7eb'],[.92,'#bac2ca'],[1,'#96a0aa']].forEach(([p,c])=>lg.addColorStop(p,c));
-  cuerpo();x.fillStyle=lg;x.fill();
-  // La misma plantilla completa se usa en la vista y en el archivo del pedido.
-  const D=document.createElement('canvas');D.width=D.height=800;const y=D.getContext('2d');
-  if(img){const wrap=plantillaTaza(img,d);
-    const viewCenter=esEnvolventeTaza(img,d)?10.5:5.25;
-    for(let X=L;X<R;X++){const u=(X+.5-cx)/rx,th=Math.asin(Math.max(-1,Math.min(1,u))),cm=th*Rcm+viewCenter+(opciones.offset||0),pos=((cm%21)+21)%21;
-      y.drawImage(wrap,pos/21*2480,0,Math.max(1,Rcm/(rx*Math.max(.05,Math.cos(th)))*2480/21),1122,X,T+6+ry*(Math.cos(th)-1)*.9,1,B-T-10)}
+  const lg=x.createLinearGradient(L,0,R,0);[[0,'#98a1ab'],[.12,'#d9dee3'],[.3,'#ffffff'],[.45,'#fbfcfd'],[.75,'#e3e7eb'],[.92,'#bac2ca'],[1,'#96a0aa']].forEach(([p,c])=>lg.addColorStop(p,c));cuerpo();x.fillStyle=lg;x.fill();
+  const y=texture.layer.getContext('2d');y.globalCompositeOperation='source-over';y.clearRect(0,0,800,800);
+  if(texture.wrap)for(let X=L;X<R;X++){const u=(X+.5-cx)/rx,th=Math.asin(Math.max(-1,Math.min(1,u))),cm=th*Rcm+texture.center+angle/360*circ+offset,pos=((cm%circ)+circ)%circ;
+    // El área junto al asa es cerámica blanca; el resto muestra los 21 cm completos.
+    if(pos>=21)continue;const sw=Math.min(2480-pos/21*2480,Math.max(1,Rcm/(rx*Math.max(.05,Math.cos(th)))*2480/21));
+    y.drawImage(texture.wrap,pos/21*2480,0,sw,1122,X,T+6+ry*(Math.cos(th)-1)*.9,1,B-T-10)}
+  y.globalCompositeOperation='source-atop';const sg=y.createLinearGradient(L,0,R,0);[[0,'rgba(0,0,0,.5)'],[.12,'rgba(0,0,0,.16)'],[.27,'rgba(255,255,255,.18)'],[.33,'rgba(255,255,255,.18)'],[.45,'rgba(0,0,0,0)'],[.75,'rgba(0,0,0,.08)'],[.92,'rgba(0,0,0,.28)'],[1,'rgba(0,0,0,.5)']].forEach(([p,c])=>sg.addColorStop(p,c));y.fillStyle=sg;y.fillRect(0,0,800,800);y.globalCompositeOperation='source-over';
+  x.save();cuerpo();x.clip();x.drawImage(texture.layer,0,0);x.restore();
+  x.fillStyle='#eef1f4';x.beginPath();x.ellipse(cx,T,rx,ry,0,0,7);x.fill();const ig=x.createLinearGradient(0,T-ry,0,T+ry);ig.addColorStop(0,'#8c96a1');ig.addColorStop(1,'#dce1e6');x.fillStyle=ig;x.beginPath();x.ellipse(cx,T+1,rx-11,ry-4,0,0,7);x.fill();
+  x.strokeStyle='rgba(0,0,0,.12)';x.lineWidth=1.5;cuerpo();x.stroke();if(Math.sin(rad)>0)asa();
+}
+function mockupTaza(d,opciones={}){const key=[d.codigo,d.preview_url,d.formato_taza,opciones.offset||0].join('|');return _mt[key]??=(async()=>{const texture=await prepararTaza(d),o=document.createElement('canvas');o.width=o.height=800;dibujarTaza(o.getContext('2d'),texture,0,opciones.offset||0);return o.toDataURL('image/jpeg',.9)})()}
+
+/* Visor 360° de la tienda: arrastre, teclado, deslizador y giro automático. */
+let _t360=null;
+function verTaza360(d){
+  if(!_t360){const dlg=document.createElement('dialog');dlg.className='taza360';dlg.setAttribute('aria-labelledby','taza360Titulo');
+    dlg.innerHTML='<button type="button" class="taza360Cerrar" aria-label="Cerrar vista 360">×</button><h2 id="taza360Titulo"></h2><p class="taza360Estado" role="status"></p><canvas width="800" height="800" tabindex="0" role="img" aria-label="Taza giratoria. Arrastra o usa las flechas del teclado para girar."></canvas><p class="taza360Ayuda">Arrastra la taza para ver todo el diseño · Giro de 360°</p><div class="taza360Controles"><button type="button" data-spin="-30" aria-label="Girar 30 grados a la izquierda">↶</button><button type="button" class="taza360Auto" aria-pressed="false">Girar automáticamente</button><button type="button" data-spin="30" aria-label="Girar 30 grados a la derecha">↷</button></div><label class="taza360Rango">Ángulo <input type="range" min="0" max="360" step="1" value="0" aria-label="Ángulo de giro de la taza"><output>0°</output></label><div class="taza360Acciones"><button type="button" class="btn ghost taza360Diseno">Ver diseño completo</button><a class="btn taza360Pedir">Personalizar esta taza</a></div>';
+    document.body.appendChild(dlg);const canvas=dlg.querySelector('canvas'),range=dlg.querySelector('input'),auto=dlg.querySelector('.taza360Auto');
+    const state={dlg,canvas,range,auto,angle:0,running:false,raf:0,texture:null,request:0,drag:null,last:0};_t360=state;
+    state.draw=()=>{if(!state.texture)return;dibujarTaza(canvas.getContext('2d'),state.texture,state.angle);range.value=Math.round(state.angle);dlg.querySelector('output').textContent=Math.round(state.angle)+'°'};
+    state.setAngle=a=>{state.angle=((a%360)+360)%360;state.draw()};
+    const tick=now=>{if(!state.running||!dlg.open)return;if(!document.hidden&&now-state.last>=40){if(state.last)state.setAngle(state.angle+Math.min(now-state.last,100)*.022);state.last=now}else if(document.hidden)state.last=now;state.raf=requestAnimationFrame(tick)};
+    state.setAuto=value=>{state.running=!!value;cancelAnimationFrame(state.raf);state.raf=0;state.last=0;auto.setAttribute('aria-pressed',String(state.running));auto.textContent=state.running?'Pausar giro':'Girar automáticamente';if(state.running)state.raf=requestAnimationFrame(tick)};
+    dlg.querySelector('.taza360Diseno').onclick=()=>{const d=state.design;dlg.close();if(d)verGrande([{src:()=>conMarca(d.preview_url),titulo:d.codigo+' · '+d.nombre,sub:d.categoria||'',oscuro:true}])};
+    dlg.querySelector('.taza360Cerrar').onclick=()=>dlg.close();dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});dlg.addEventListener('close',()=>{state.setAuto(false);state.drag=null;state.request++;state.texture=null});
+    auto.onclick=()=>{if(state.texture)state.setAuto(!state.running)};
+    dlg.querySelectorAll('[data-spin]').forEach(b=>b.onclick=()=>{state.setAuto(false);state.setAngle(state.angle+Number(b.dataset.spin))});
+    range.oninput=()=>{state.setAuto(false);state.setAngle(Number(range.value))};
+    canvas.addEventListener('pointerdown',e=>{if(!state.texture)return;e.preventDefault();canvas.focus();state.setAuto(false);canvas.setPointerCapture(e.pointerId);state.drag={x:e.clientX,angle:state.angle}});
+    canvas.addEventListener('pointermove',e=>{if(state.drag)state.setAngle(state.drag.angle+(e.clientX-state.drag.x)/Math.max(1,canvas.clientWidth)*360)});
+    ['pointerup','pointercancel','lostpointercapture'].forEach(name=>canvas.addEventListener(name,()=>state.drag=null));
+    canvas.addEventListener('keydown',e=>{if(!['ArrowLeft','ArrowRight','Home'].includes(e.key))return;e.preventDefault();state.setAuto(false);state.setAngle(e.key==='Home'?0:state.angle+(e.key==='ArrowLeft'?-15:15))});
   }
-  y.globalCompositeOperation='source-atop';const sg=y.createLinearGradient(L,0,R,0);[[0,'rgba(0,0,0,.5)'],[.12,'rgba(0,0,0,.16)'],[.27,'rgba(255,255,255,.18)'],[.33,'rgba(255,255,255,.18)'],[.45,'rgba(0,0,0,0)'],[.75,'rgba(0,0,0,.08)'],[.92,'rgba(0,0,0,.28)'],[1,'rgba(0,0,0,.5)']].forEach(([p,c])=>sg.addColorStop(p,c));
-  y.fillStyle=sg;y.fillRect(0,0,800,800);x.save();cuerpo();x.clip();x.drawImage(D,0,0);x.restore();
-  x.fillStyle='#eef1f4';x.beginPath();x.ellipse(cx,T,rx,ry,0,0,7);x.fill();
-  const ig=x.createLinearGradient(0,T-ry,0,T+ry);ig.addColorStop(0,'#8c96a1');ig.addColorStop(1,'#dce1e6');x.fillStyle=ig;x.beginPath();x.ellipse(cx,T+1,rx-11,ry-4,0,0,7);x.fill();
-  x.strokeStyle='rgba(0,0,0,.12)';x.lineWidth=1.5;cuerpo();x.stroke();
-  return o.toDataURL('image/jpeg',.88)})()}
+  const s=_t360;s.design=d;s.setAuto(false);s.texture=null;s.angle=0;s.range.value=0;s.dlg.querySelector('output').textContent='0°';s.dlg.querySelector('h2').textContent=d.codigo+' · '+d.nombre;
+  s.dlg.querySelector('.taza360Pedir').href='taza.html?dn='+encodeURIComponent(d.codigo);s.dlg.querySelector('.taza360Estado').textContent='Cargando vista de la taza…';s.canvas.getContext('2d').clearRect(0,0,800,800);
+  if(!s.dlg.open)s.dlg.showModal();const request=++s.request;
+  prepararTaza(d).then(texture=>{if(request!==s.request||!s.dlg.open)return;s.texture=texture;s.draw();s.dlg.querySelector('.taza360Estado').textContent='Taza blanca 11 oz · '+money(precioTaza(d));s.setAuto(!matchMedia('(prefers-reduced-motion: reduce)').matches)}).catch(()=>{if(request===s.request)s.dlg.querySelector('.taza360Estado').textContent='No se pudo cargar el diseño. Cierra e inténtalo de nuevo.'});
+}
 // cada diseño da hasta 2 productos: camiseta («En la tienda») y taza («Taza en la tienda»)
 const productosTienda=disenosTienda.then(rows=>(rows||[]).flatMap(d=>[d.en_tienda&&{d,tipo:'camiseta'},d.taza&&{d,tipo:'taza'}].filter(Boolean)));
 const fotoDe=p=>p.tipo==='taza'?mockupTaza(p.d):mockup(p.d,colorTienda(p.d));
-const verProducto=p=>p.tipo==='taza'?verGrande([{src:()=>mockupTaza(p.d),titulo:`${p.d.codigo} · ${p.d.nombre}`,sub:`Taza blanca 11 oz · ${money(precioTaza(p.d))}`,oscuro:false,diseno:()=>conMarca(p.d.preview_url),accion:{texto:'Personalizar esta taza',href:'taza.html?dn='+encodeURIComponent(p.d.codigo)}}]):verColores(p.d);
+const verProducto=p=>p.tipo==='taza'?verTaza360(p.d):verColores(p.d);
 // las fotos se dibujan cuando la tarjeta se acerca a la pantalla
 // respaldo: si el navegador no avisa (pestaña en segundo plano), se dibuja igual en unos segundos
 function pintarCuando(img,p,i=0){let hecho=false;const ir=()=>{if(hecho)return;hecho=true;io.disconnect();
@@ -128,7 +158,7 @@ function pintarCuando(img,p,i=0){let hecho=false;const ir=()=>{if(hecho)return;h
 const VACIO='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
 (async()=>{const box=$('.realProducts');if(!box)return;const rows=await productosTienda;if(!rows.length){box.innerHTML='<p class="status">Pronto agregaremos productos. Mientras tanto, <a href="disena.html"><u>diseña tu camisa</u></a>.</p>';return}
   box.innerHTML=rows.map((p,i)=>{const d=p.d,c=colorTienda(d),taza=p.tipo==='taza',det=taza?`Taza blanca 11 oz • diseño ${d.codigo}`:detalleDe(d,c),precio=taza?precioTaza(d):precioDe(d);
-    return `<article data-tipo="${p.tipo}" data-cat="${esc(d.categoria||'')}"><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(d.nombre)} en grande"><img class="mk" src="${VACIO}" alt="${esc(d.nombre)}"></button><h3>${esc(d.nombre)}</h3><p>${esc(det)}</p><strong>${money(precio)}</strong>
+    return `<article data-tipo="${p.tipo}" data-cat="${esc(d.categoria||'')}"><button type="button" class="zoom${taza?' tazaZoom':''}" data-i="${i}" aria-label="Ver ${esc(d.nombre)}${taza?' en 360 grados':' en grande'}"><img class="mk" src="${VACIO}" alt="${esc(d.nombre)}">${taza?'<span class="taza360Badge">↔ 360°</span>':''}</button><h3>${esc(d.nombre)}</h3><p>${esc(det)}</p><strong>${money(precio)}</strong>
     ${taza?'':`<label class="tallaLbl">Talla <select class="tallaSel">${TALLAS_TIENDA.map(t=>`<option${t==='M'?' selected':''}>${t}</option>`).join('')}</select></label>`}
     <button class="btn cart" data-name="${esc(taza?`Taza ${d.nombre}`:d.nombre)}" data-detail="${esc(det)}" data-price="${precio}">Agregar al carrito</button>${taza?`<a class="btn ghost cambiar" href="taza.html?dn=${encodeURIComponent(d.codigo)}">Cambiar diseño de taza</a>`:`<a class="btn ghost cambiar" href="${esc(enlaceDe(d,c.nombre))}">Cambiar color o diseño</a>`}</article>`}).join('');
   box.querySelectorAll('img.mk').forEach((img,i)=>pintarCuando(img,rows[i],i));
@@ -139,7 +169,7 @@ const VACIO='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICT
   f.onclick=e=>{const b=e.target.closest('button');if(!b)return;f.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));const [k,v]=b.dataset.f.split(/:(.*)/);box.querySelectorAll('article').forEach(a=>a.hidden=!!k&&a.dataset[k]!==v)}})();
 /* ---------- Carrusel de la tienda en el Inicio ---------- */
 (async()=>{const box=$('#carrusel');if(!box)return;const rows=await productosTienda;if(!rows.length){box.closest('section').hidden=true;return}
-  const pista=box.querySelector('.pista');pista.innerHTML=rows.map(({d,tipo},i)=>`<article class="slide"><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(d.nombre)} en grande"><img class="mk" src="${VACIO}" alt="${esc(d.nombre)}"></button><b>${esc(d.nombre)}</b><span>${tipo==='taza'?'Taza blanca 11 oz':`Camiseta color ${esc(colorTienda(d).nombre.toLowerCase())}`}</span><strong>${money(tipo==='taza'?precioTaza(d):precioDe(d))}</strong></article>`).join('');
+  const pista=box.querySelector('.pista');pista.innerHTML=rows.map(({d,tipo},i)=>`<article class="slide"><button type="button" class="zoom${tipo==='taza'?' tazaZoom':''}" data-i="${i}" aria-label="Ver ${esc(d.nombre)}${tipo==='taza'?' en 360 grados':' en grande'}"><img class="mk" src="${VACIO}" alt="${esc(d.nombre)}">${tipo==='taza'?'<span class="taza360Badge">↔ 360°</span>':''}</button><b>${esc(d.nombre)}</b><span>${tipo==='taza'?'Taza blanca 11 oz':`Camiseta color ${esc(colorTienda(d).nombre.toLowerCase())}`}</span><strong>${money(tipo==='taza'?precioTaza(d):precioDe(d))}</strong></article>`).join('');
   pista.querySelectorAll('img.mk').forEach((img,i)=>pintarCuando(img,rows[i],i));
   pista.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verProducto(rows[+z.dataset.i])});
   const paso=()=>pista.querySelector('.slide').getBoundingClientRect().width+16;

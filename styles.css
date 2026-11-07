@@ -32,3 +32,25 @@ img.mk{aspect-ratio:1;background:radial-gradient(circle at 50% 40%,#a9b4c1,#8692
 .vg.verDis .vgImg{padding:4%}.vg.verDis:not(.claro) .vgImg{background:#151515}
 
 .filtros{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:0 auto 22px}.filtros button{background:#102b47;border:1px solid #24577f;color:#cce7ff;padding:9px 15px;border-radius:999px;font-weight:800;cursor:pointer}.filtros button[aria-pressed=true]{background:#169cf1;border-color:#169cf1;color:#fff}.realProducts article[hidden]{display:none}
+
+/* Vista de taza giratoria en tienda y carrusel. */
+.tazaZoom{position:relative}
+.taza360Badge{position:absolute;right:12px;bottom:12px;background:#071b30e8;color:#fff;border:1px solid #64c3ff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;pointer-events:none}
+.taza360{position:fixed;inset:0;margin:auto;width:min(94vw,680px);max-height:94dvh;overflow:auto;border:1px solid #3975a6;border-radius:20px;padding:22px;background:#071b30;color:#eaf4ff;text-align:center}
+.taza360::backdrop{background:#000b}
+.taza360 h2{font-size:22px;letter-spacing:0;margin:0 30px 8px}
+.taza360Estado,.taza360Ayuda{font-size:13px;color:#b8d0e3;margin:10px 0}
+.taza360 canvas{display:block;width:min(100%,52dvh);height:auto;margin:12px auto;border-radius:14px;touch-action:none;cursor:grab}
+.taza360 canvas:active{cursor:grabbing}
+.taza360Cerrar{position:absolute;right:12px;top:10px;width:35px;height:35px;border:0;border-radius:50%;background:#19426a;color:#fff;font-size:26px;cursor:pointer}
+.taza360Controles{display:flex;justify-content:center;align-items:center;gap:10px}
+.taza360Controles button{border:1px solid #3975a6;border-radius:999px;background:#102b47;color:#fff;padding:10px 16px;font-weight:700;cursor:pointer}
+.taza360Controles button[aria-pressed=true]{background:#1f78ff}
+.taza360Rango{display:flex;align-items:center;gap:10px;max-width:460px;margin:14px auto;font-size:13px}
+.taza360Rango input{width:100%;margin:0;padding:0;accent-color:#1f78ff}
+.taza360Rango output{min-width:40px}
+.taza360Pedir{display:inline-block;margin-top:3px}
+.taza360 :focus-visible{outline:3px solid #ffd465;outline-offset:3px}
+@media(max-width:420px){.taza360{padding:18px 12px}.taza360 h2{font-size:19px}.taza360Controles{gap:6px}.taza360Controles button{padding:9px 12px}}
+
+.taza360Acciones{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.taza360Acciones .btn{font-size:13px;padding:10px 14px}
