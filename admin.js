@@ -59,7 +59,16 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
   let nuevaFoto=null,nuevoVideo=null,nuevaImpresion=null;
   if(def.foto){const img=document.createElement('img');img.className='thumb';img.alt='';if(row[def.foto])img.src=row[def.foto];
     const lb=document.createElement('label');lb.className='fileBtn';const ft=def.fotoTxt||'foto';lb.textContent=row[def.foto]?`Cambiar ${ft}`:`Subir ${ft}`;const inp=document.createElement('input');inp.type='file';inp.accept='image/png,image/jpeg,image/webp';
-    inp.onchange=()=>{const f=inp.files[0];if(!f)return;nuevaFoto=f;img.src=URL.createObjectURL(f);lb.firstChild.textContent='Foto lista para guardar'};lb.appendChild(inp);izq.append(img,lb)}
+    inp.onchange=()=>{const f=inp.files[0];if(!f)return;nuevaFoto=f;img.src=URL.createObjectURL(f);lb.firstChild.textContent='Foto lista para guardar'};lb.appendChild(inp);izq.append(img,lb);
+    if(t==='disenos'&&row.preview_url){const descargar=document.createElement('button');descargar.type='button';descargar.className='btn ghost';descargar.style.cssText='margin-top:10px;padding:8px;font-size:12px';descargar.textContent='⬇ Descargar vista PNG';
+      const aviso=document.createElement('span');aviso.className='msg';aviso.style.display='block';
+      descargar.onclick=async()=>{descargar.disabled=true;aviso.textContent='Preparando descarga…';
+        try{const r=await fetch(row.preview_url);if(!r.ok)throw new Error('No se pudo descargar la vista.');
+          const blob=await r.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');
+          a.href=url;a.download=(row.codigo||'diseno')+'-vista.'+(blob.type==='image/jpeg'?'jpg':blob.type==='image/webp'?'webp':'png');
+          document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);aviso.textContent='Vista descargada. Para DTF usa el archivo de impresión.';
+        }catch(error){aviso.textContent=error.message||'No se pudo descargar';aviso.className='msg err'}finally{descargar.disabled=false}};
+      izq.append(descargar,aviso)}}
   else{const n=document.createElement('div');n.className='pin';n.style.margin='10px auto';n.innerHTML=`<span>${i==null?'+':i+1}</span>`;izq.appendChild(n)}
   for(const [k,label,tipo,req] of def.campos){const lb=document.createElement(tipo==='impresion'?'div':'label');
     if(tipo==='impresion'){lb.className='ancho';const t=document.createElement('b');t.style.fontSize='12px';t.textContent=label;const fila2=document.createElement('div');fila2.className='acc';fila2.style.marginTop='4px';
