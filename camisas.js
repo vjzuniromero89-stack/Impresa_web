@@ -29,16 +29,21 @@ const PRENDAS={
   // pieza del conjunto (no se vende sola en el diseñador)
   legging:{
     nombre:'Legging',corto:'Legging',
-    fotos:{legging:'assets/legging/frente.png'},
-    zonas:{legging:{x:53,y:24,w:12,h:27}}, // muslo izquierdo de quien lo usa (derecha en la foto)
-    etiqueta:null,
     // shortcut: colores de muestra; cambiar por los que consiga IMPRESA
     colores:[['Negro','#151515'],['Gris oscuro','#55575b'],['Azul marino','#1d2340'],['Vino','#6a1b2b'],['Café','#4a3326'],['Verde botella','#1e3b2b'],['Rosado','#f3c0d6',1],['Beige','#e3d3bd',1],['Blanco','#ffffff',1]]
   },
   // Conjunto = camiseta + legging, se eligen juntos (cliente, 2026-11-07)
+  // modelo con camiseta (arriba) y legging (abajo): una foto, dos telas que se tiñen por separado
+  modelo:{
+    nombre:'Conjunto en modelo',corto:'Conjunto',
+    modelo:{base:'assets/modelo/base.jpg',mascara:'assets/modelo/mascara.png'},
+    // pct = % del lienzo por cm (la modelo se ve más chica que la camiseta sola: ≈0.5 %/cm)
+    zonas:{frente:{x:39,y:11,w:21,h:19,pct:0.5},legging:{x:51.5,y:45,w:10,h:16,pct:0.5}}, // legging: muslo izquierdo de quien lo usa
+    etiqueta:null,colores:[]
+  },
   conjunto:{
     nombre:'Conjunto (camiseta + legging)',corto:'Conjunto',
-    piezas:{frente:'camiseta',espalda:'camiseta',legging:'legging'},
+    piezas:{frente:'modelo',espalda:'camiseta',legging:'modelo'},
     tallasNino:true,soloMujer:true,
     tecnicas:['DTF'],
     colores:[]
@@ -53,8 +58,11 @@ function cargarImg(src){return new Promise((res,rej)=>{const i=new Image();i.onl
 // Luz (0..1) y transparencia de cada píxel, una vez por prenda y lado
 const piezaDe=(id,lado)=>PRENDAS[id].piezas?.[lado]||id;
 const zonaDe=(id,lado)=>PRENDAS[piezaDe(id,lado)].zonas[lado];
+const pctDe=(id,lado)=>zonaDe(id,lado).pct||PCT_CM;
 async function cargarPrenda(id){if(_cache[id])return _cache[id];const p=PRENDAS[id],out={};
   if(p.piezas){for(const pz of new Set(Object.values(p.piezas)))await cargarPrenda(pz);return _cache[id]=true}
+  if(p.modelo){const px=async src=>{const img=await cargarImg(src),c=document.createElement('canvas');c.width=c.height=800;const x=c.getContext('2d');x.drawImage(img,0,0,800,800);return x.getImageData(0,0,800,800).data};
+    const m={base:await px(p.modelo.base),mask:await px(p.modelo.mascara)};return _cache[id]={frente:{modelo:m},legging:{modelo:m}}}
   for(const lado of Object.keys(p.fotos)){const img=await cargarImg(p.fotos[lado]),c=document.createElement('canvas');c.width=c.height=800;const x=c.getContext('2d');x.drawImage(img,0,0,800,800);
     const d=x.getImageData(0,0,800,800).data,l=new Float32Array(640000),a=new Uint8ClampedArray(640000);
     for(let i=0,k=0;k<640000;i+=4,k++){l[k]=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/245;a[k]=d[i+3]}
@@ -62,7 +70,14 @@ async function cargarPrenda(id){if(_cache[id])return _cache[id];const p=PRENDAS[
   return _cache[id]=out}
 
 // Pinta la camisa en un lienzo de 800×800 (sincrónico; cargarPrenda antes)
-function pintarCamisa(ctx,id,lado,hex,talla){id=piezaDe(id,lado);const s=_cache[id]?.[lado];if(!s)return;const out=ctx.createImageData(800,800),o=out.data,[r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),lum=(0.299*r+0.587*g+0.114*b)/255,brillo=(1-lum)*30;
+const rgb=hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));
+// hex2 = color del legging (solo en la modelo)
+function pintarCamisa(ctx,id,lado,hex,talla,hex2='#151515'){id=piezaDe(id,lado);const s=_cache[id]?.[lado];if(!s)return;
+  if(s.modelo){const out=ctx.createImageData(800,800),o=out.data,B=s.modelo.base,M=s.modelo.mask,c1=rgb(hex),c2=rgb(hex2),
+      br=c=>(1-(0.299*c[0]+0.587*c[1]+0.114*c[2])/255)*30,b1=br(c1),b2=br(c2);
+    for(let i=0;i<2560000;i+=4){const wc=M[i]/255,wl=M[i+1]/255,v=Math.min(1.04,M[i+2]/255*1.1),h=Math.pow(v,10),wb=Math.max(0,1-wc-wl);
+      for(let ch=0;ch<3;ch++)o[i+ch]=B[i+ch]*wb+(c1[ch]*v+b1*h)*wc+(c2[ch]*v+b2*h)*wl;o[i+3]=255}
+    ctx.putImageData(out,0,0);return}const out=ctx.createImageData(800,800),o=out.data,[r,g,b]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)),lum=(0.299*r+0.587*g+0.114*b)/255,brillo=(1-lum)*30;
   // brillo suave en colores oscuros: con más, el negro se veía gris
   for(let k=0,i=0;k<640000;k++,i+=4){const v=Math.min(1.04,s.l[k]),h=brillo*Math.pow(v,10);o[i]=r*v+h;o[i+1]=g*v+h;o[i+2]=b*v+h;o[i+3]=s.a[k]}
   ctx.putImageData(out,0,0);if(s.ribete)ctx.drawImage(s.ribete,0,0,800,800);
