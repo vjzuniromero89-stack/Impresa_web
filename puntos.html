@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#061426">
+<title>Puntos de entrega | IMPRESA</title>
+<meta name="description" content="Puntos de entrega de IMPRESA en Managua: elige el más cercano y recoge tu pedido de 12:00 m a 2:00 pm.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="styles.css">
+<style>
+.pts{max-width:1240px;margin:auto;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+#mapa{height:560px;border-radius:16px;border:1px solid #1d4d77;z-index:0}
+.horario{max-width:1240px;margin:0 auto 18px;display:flex;gap:14px;align-items:center;background:#0b2037;border:1px solid #1d4d77;border-radius:14px;padding:14px 18px}
+.horario b{font-size:26px;color:#37aefe;white-space:nowrap}
+.horario p{margin:0;color:#c9dcec;line-height:1.5}
+.lista{display:grid;gap:12px}
+.lista .acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.lista .btn{padding:10px 14px;font-size:13px}
+.pt{background:#0b2037;border:1px solid #1d4d77;border-radius:14px;padding:16px;cursor:pointer}
+.pt.cerca{border-color:#29a8ff;box-shadow:0 0 0 3px #29a8ff33}
+.pt.elegido{border-color:#50d899}
+.pt h3{margin:0 0 4px;display:flex;gap:10px;align-items:center}
+.pt h3 i{font-style:normal;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#1f78ff;font-size:13px;flex:none}
+.pt p{margin:3px 0;color:#b8d0e3;font-size:13px}
+.pt .dist{color:#5cc2ff;font-weight:700}
+.pin{width:30px;height:30px;border-radius:50% 50% 50% 0;background:#1f78ff;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 3px 8px #0006;display:grid;place-items:center}
+.pin span{transform:rotate(45deg);color:#fff;font-weight:800;font-size:13px;font-family:Inter,Arial,sans-serif}
+.pin.cerca{background:#18a23a}
+.yo{width:16px;height:16px;border-radius:50%;background:#1f78ff;border:3px solid #fff;box-shadow:0 0 0 6px #1f78ff40}
+.leaflet-popup-content{font-family:Inter,Arial,sans-serif;color:#0a1b30}
+#ubicStatus{margin:0;color:#9fc0da;font-size:13px}
+@media(max-width:900px){.pts{grid-template-columns:1fr}#mapa{height:420px}}
+@media(max-width:520px){#mapa{height:360px}.horario{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<header><a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a><button id="menu" aria-label="Abrir menú">☰</button><nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="catalogo.html">Catálogo</a><a href="tienda.html">Tienda</a><a href="galeria.html">Galería</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="puntos.html">Puntos de entrega</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav></header>
+<main>
+<section class="pageHero"><p class="eyebrow">MANAGUA</p><h1>Puntos de entrega</h1><p>Elige el punto que te quede más cerca y recoge ahí tu pedido.</p></section>
+<section class="standalone">
+  <div class="horario"><b>12:00 m</b><p>Nuestros motorizados llegan a cada punto a las 12:00 del mediodía. Puedes recoger tu pedido <strong>de 12:00 m a 2:00 pm</strong>. Te confirmamos el día por WhatsApp.</p></div>
+  <div class="pts">
+    <div id="mapa" role="region" aria-label="Mapa de puntos de entrega en Managua"></div>
+    <div class="lista">
+      <button type="button" class="btn" id="ubicar">📍 Buscar el punto más cercano a mí</button>
+      <p id="ubicStatus" role="status"></p>
+      <div id="lista" class="lista"><p class="status">Cargando puntos…</p></div>
+    </div>
+  </div>
+</section>
+</main>
+<footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="config.js"></script><script src="app.js"></script>
+<script>
+(async()=>{
+const MANAGUA=[12.1150,-86.2362];
+const mapa=L.map('mapa',{scrollWheelZoom:false}).setView(MANAGUA,12);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(mapa);
+mapa.on('focus',()=>mapa.scrollWheelZoom.enable());mapa.on('blur',()=>mapa.scrollWheelZoom.disable());
+
+const pts=await sbGet('puntos_entrega?select=id,nombre,direccion,referencia,lat,lng,horario&activo=eq.true&order=orden,created_at')||[];
+const lista=$('#lista');let elegido=null;try{elegido=localStorage.getItem('impresa-punto')}catch{}
+const pin=(n,cerca)=>L.divIcon({className:'',html:`<div class="pin${cerca?' cerca':''}"><span>${n}</span></div>`,iconSize:[30,30],iconAnchor:[15,30],popupAnchor:[0,-28]});
+const km=(a,b)=>{const R=6371,r=x=>x*Math.PI/180,dl=r(b[0]-a[0]),dn=r(b[1]-a[1]),h=Math.sin(dl/2)**2+Math.cos(r(a[0]))*Math.cos(r(b[0]))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+const marcas=[];
+
+function pintar(distancias){lista.innerHTML='';
+  if(!pts.length){lista.innerHTML='<p class="status">Pronto publicaremos los puntos de entrega en Managua. Mientras tanto, escríbenos por WhatsApp y coordinamos tu entrega.</p>';$('#ubicar').hidden=true;return}
+  const orden=pts.map((p,i)=>({p,i,d:distancias?.[i]})).sort((a,b)=>(a.d??0)-(b.d??0));
+  const cerca=distancias?orden[0].i:-1;
+  orden.forEach(({p,i,d})=>{marcas[i].setIcon(pin(i+1,i===cerca));
+    const c=document.createElement('article');c.className='pt'+(i===cerca?' cerca':'')+(p.id===elegido?' elegido':'');
+    c.innerHTML=`<h3><i>${i+1}</i><span></span></h3><p class="dir"></p><p class="ref"></p><p>🕛 <span class="hor"></span></p>${d!=null?`<p class="dist">${i===cerca?'El más cercano · ':''}a ${d<1?Math.round(d*1000)+' m':d.toFixed(1)+' km'} de ti (en línea recta)</p>`:''}
+      <div class="acciones"><button type="button" class="btn elegir">${p.id===elegido?'✓ Punto elegido':'Elegir este punto'}</button><a class="btn ghost" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}">Cómo llegar</a></div>`;
+    c.querySelector('h3 span').textContent=p.nombre;c.querySelector('.dir').textContent=p.direccion;c.querySelector('.ref').textContent=p.referencia;c.querySelector('.hor').textContent=p.horario;
+    if(!p.referencia)c.querySelector('.ref').remove();
+    c.addEventListener('click',e=>{if(e.target.closest('a,button'))return;mapa.flyTo([p.lat,p.lng],15);marcas[i].openPopup()});
+    c.querySelector('.elegir').addEventListener('click',()=>{elegido=p.id;try{localStorage.setItem('impresa-punto',p.id)}catch{}pintar(distancias);$('#ubicStatus').innerHTML=`Elegiste <b></b>. Ya quedó marcado en <a href="pedido.html"><u>Mi pedido</u></a>.`;$('#ubicStatus b').textContent=p.nombre});
+    lista.appendChild(c)})}
+
+pts.forEach((p,i)=>{const m=L.marker([p.lat,p.lng],{icon:pin(i+1),title:p.nombre}).addTo(mapa);const div=document.createElement('div');div.innerHTML='<b></b><br><span></span><br>🕛 <span></span>';div.children[0].textContent=p.nombre;div.children[2].textContent=p.direccion;div.children[4].textContent=p.horario;m.bindPopup(div);marcas.push(m)});
+if(pts.length>1)mapa.fitBounds(L.latLngBounds(pts.map(p=>[p.lat,p.lng])).pad(0.25));else if(pts.length)mapa.setView([pts[0].lat,pts[0].lng],14);
+pintar();
+
+let yo=null;
+$('#ubicar').addEventListener('click',()=>{const s=$('#ubicStatus');if(!navigator.geolocation){s.textContent='Tu navegador no permite ubicarte. Mira el mapa y elige el punto más cercano.';return}
+  s.textContent='Buscando tu ubicación…';
+  navigator.geolocation.getCurrentPosition(pos=>{const me=[pos.coords.latitude,pos.coords.longitude];
+    if(yo)yo.remove();yo=L.marker(me,{icon:L.divIcon({className:'',html:'<div class="yo"></div>',iconSize:[16,16],iconAnchor:[8,8]}),title:'Tú'}).addTo(mapa).bindPopup('Estás aquí');
+    const ds=pts.map(p=>km(me,[p.lat,p.lng]));pintar(ds);const i=ds.indexOf(Math.min(...ds));
+    mapa.fitBounds(L.latLngBounds([me,[pts[i].lat,pts[i].lng]]).pad(0.4));s.textContent='Te marcamos en verde el punto más cercano. Tu ubicación no se guarda ni se envía.'},
+  err=>{s.textContent=err.code===1?'No diste permiso para ver tu ubicación. Mira el mapa y elige el punto más cercano.':'No pudimos encontrar tu ubicación. Mira el mapa y elige el punto más cercano.'},{enableHighAccuracy:true,timeout:12000})});
+})();
+</script>
+</body>
+</html>

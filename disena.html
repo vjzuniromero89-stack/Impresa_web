@@ -1,1 +1,96 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#061426"><title>Diseña tu camisa | IMPRESA</title><link rel="stylesheet" href="styles.css"></head><body><header><a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a><button id="menu" aria-label="Abrir menú">☰</button><nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="tienda.html">Tienda</a><a href="galeria.html">Galería</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav></header><main><section class="pageHero"><p class="eyebrow">ESTUDIO IMPRESA</p><h1>Diseña tu camisa</h1><p>Arrastra la prenda con el dedo o mouse para girarla manualmente.</p></section><section class="designer standalone"><div class="designerGrid"><div class="preview"><div class="previewTop"><span>PREVISUALIZACIÓN</span><span class="liveDot">● EN VIVO</span></div><div class="tabs"><button class="active" data-view="front">Frente</button><button data-view="back">Espalda</button><button data-view="left">Manga izq.</button><button data-view="right">Manga der.</button></div><div id="dragStudio" class="studio dragStudio"><div id="model" class="model realistic"><span class="neck"></span><span id="designMark">TU DISEÑO</span></div><div class="dragHint">↔ Arrastra para girar</div></div><small id="viewNote">Giro manual: arrastra con el dedo o mouse.</small></div><form id="config"><div class="step"><span>01</span><b>Elige la prenda</b></div><label>¿Para quién?<select id="audience"><option>Hombre</option><option>Mujer</option><option>Niño</option><option>Niña</option></select></label><label>Prenda<select id="garment"><option>Camiseta</option><option>Polo</option><option>Sudadera</option></select></label><label>Color<input id="color" type="color" value="#ffffff"></label><div class="step"><span>02</span><b>Agrega tu diseño</b></div><label class="upload">Tu diseño<input id="file" type="file" accept="image/*"><span>＋ Subir logo o imagen</span></label><fieldset><legend>Distribución de tallas</legend><div class="sizes"><label>XS<input class="qty" type="number" min="0" value="0"></label><label>S<input class="qty" type="number" min="0" value="0"></label><label>M<input class="qty" type="number" min="0" value="1"></label><label>L<input class="qty" type="number" min="0" value="0"></label><label>XL<input class="qty" type="number" min="0" value="0"></label><label>2XL<input class="qty" type="number" min="0" value="0"></label></div><p>Total: <strong id="totalQty">1</strong> prendas</p></fieldset><div class="step"><span>03</span><b>Técnica de impresión</b></div><fieldset><div id="techs"></div><p id="reason" class="reason"></p></fieldset><div class="price"><span>Estimado</span><strong id="price">C$ 350</strong><small>Estimación demostrativa hasta cargar tus tarifas reales.</small></div><button type="button" class="btn full" id="add">Agregar configuración</button></form></div></section></main><footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer><script src="config.js"></script><script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#061426">
+<title>Diseña tu camisa | IMPRESA</title>
+<meta name="description" content="Diseña tu camiseta con DTF o sublimación: elige el color, sube tu diseño y mira tu precio al instante.">
+<link rel="stylesheet" href="styles.css">
+<style>
+.dz{max-width:1180px;margin:auto;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:24px;align-items:start}
+.dzPrev{background:#0b2037;border:1px solid #1d4d77;border-radius:16px;padding:16px;position:sticky;top:90px}
+.ladoTabs{display:flex;gap:8px;margin-bottom:12px}
+.ladoBtn{flex:1;background:#102b47;border:1px solid #24577f;color:#cce7ff;padding:11px;border-radius:9px;font-weight:700;cursor:pointer}
+.ladoBtn.active{background:#1b9ce9;color:#fff;border-color:#1b9ce9}
+.ladoBtn small{display:block;font-weight:400;font-size:11px;opacity:.85}
+#stage{position:relative;aspect-ratio:1;border-radius:12px;background:radial-gradient(circle at 50% 40%,#f7f9fb,#d9dee4 70%,#c3cad2);overflow:hidden;touch-action:none;user-select:none}
+#shirt{position:absolute;inset:0;width:100%;height:100%}
+#zona{position:absolute;border:1.5px dashed #1b9ce980;border-radius:6px;pointer-events:none;transition:opacity .2s}
+#zona:not(.vacia){opacity:0}#stage:hover #zona{opacity:1}
+#zona.vacia::after{content:"Zona de impresión";position:absolute;inset:auto 0 50%;text-align:center;color:#1b6fa8;font-size:12px;font-weight:700;opacity:.8}
+#designImg{position:absolute;cursor:grab;filter:drop-shadow(0 1px 1px #0002);max-width:none}
+#designImg:active{cursor:grabbing}
+.hint{color:#9fc0da;font-size:12px;margin:10px 0 0;text-align:center}
+#sizeBox{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
+#sizeBox input{flex:1;min-width:140px;margin:0;padding:0;accent-color:#1b9ce9}
+#sizeBox .btn{padding:9px 12px;font-size:12px}
+.dzForm{background:#0b2037;border:1px solid #1d4d77;border-radius:16px;padding:22px;display:grid;gap:16px}
+.tecs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tec{position:relative;display:block;padding:14px;border:1.5px solid #24577f;border-radius:12px;background:#0d2a47;cursor:pointer;font-weight:400}
+.tec input{position:absolute;opacity:0}
+.tec b{display:block;font-size:16px;margin-bottom:4px}
+.tec span{font-size:12px;color:#a9c5db;line-height:1.4}
+.tec:has(input:checked){border-color:#29a8ff;background:#0f3558;box-shadow:0 0 0 3px #29a8ff33}
+.tec:has(input:focus-visible){outline:2px solid #fff}
+#tecNota{margin:0;color:#ffce72;font-size:12px}
+#colores{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid #ffffff40;cursor:pointer;box-shadow:inset 0 0 0 1px #0003}
+.sw.on{outline:3px solid #29a8ff;outline-offset:2px}
+.upload2{display:block;margin-top:8px;padding:16px;border:1.5px dashed #3183bb;border-radius:10px;text-align:center;color:#64c3ff;background:#0b2945;cursor:pointer;font-weight:700}
+.upload2 input{display:none}
+.upload2:focus-within{outline:2px solid #fff}
+.tip{margin:6px 0 0;color:#9fc0da;font-size:12px;font-weight:400}
+.sizes{grid-template-columns:repeat(4,1fr)}
+#unit{color:#9fc0da}
+@media(max-width:900px){.dz{grid-template-columns:1fr}.dzPrev{position:static}}
+@media(max-width:520px){.sizes{grid-template-columns:repeat(4,1fr);gap:6px}.sizes input{padding:10px 6px}.dzForm{padding:16px}.tec{padding:11px}}
+</style>
+</head>
+<body>
+<header><a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a><button id="menu" aria-label="Abrir menú">☰</button><nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="catalogo.html">Catálogo</a><a href="tienda.html">Tienda</a><a href="galeria.html">Galería</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="puntos.html">Puntos de entrega</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav></header>
+<main>
+<section class="pageHero"><p class="eyebrow">ESTUDIO IMPRESA</p><h1>Diseña tu camisa</h1><p>Camisas Klasiko reales: elige el estilo y el color, sube tu diseño y muévelo sobre la camisa.</p></section>
+<section class="standalone">
+<div class="dz">
+  <div class="dzPrev">
+    <div class="ladoTabs"><button type="button" class="ladoBtn active" data-lado="frente">Frente</button><button type="button" class="ladoBtn" data-lado="espalda">Espalda</button></div>
+    <div id="stage"><canvas id="shirt" width="800" height="800" role="img" aria-label="Vista de la camiseta"></canvas><div id="zona" class="vacia"></div><img id="designImg" alt="Tu diseño" hidden draggable="false"></div>
+    <div id="sizeBox" hidden><label for="cm" style="flex-basis:100%">Tamaño: <span id="cmTxt"></span></label><input id="cm" type="range" min="5" max="30" step="1"><button type="button" class="btn ghost" id="centrar">Centrar</button><button type="button" class="btn ghost" id="quitar" hidden>Quitar</button></div>
+    <p class="hint">Arrastra tu diseño con el dedo o el mouse. La línea punteada es el área que se puede imprimir.</p>
+  </div>
+
+  <form id="config" class="dzForm">
+    <div class="step"><span>01</span><b>Estilo de camisa Klasiko</b></div>
+    <div class="tecs">
+      <label class="tec"><input type="radio" name="prenda" value="camiseta" checked><b>Camiseta</b><span>Cuello redondo, algodón. 17 colores.</span></label>
+      <label class="tec"><input type="radio" name="prenda" value="waffit"><b>Camisa Waffit</b><span>Tipo polo, tela waffle con ribete gris. 13 colores.</span></label>
+    </div>
+    <p class="tip" style="margin:-6px 0 0"><a href="catalogo.html"><u>Ver el catálogo con todos los colores</u></a></p>
+
+    <div class="step"><span>02</span><b>Técnica</b></div>
+    <div class="tecs">
+      <label class="tec"><input type="radio" name="tec" value="DTF" checked><b>DTF</b><span>En camisas de cualquier color. Colores vivos y detalles finos.</span></label>
+      <label class="tec"><input type="radio" name="tec" value="Sublimación"><b>Sublimación</b><span>La tinta queda dentro de la tela. No se siente al tacto.</span></label>
+    </div>
+    <p id="tecNota" hidden>La sublimación solo funciona en camisas de poliéster blancas o de colores claros, por eso solo ves esos colores.</p>
+
+    <div class="step"><span>03</span><b>Color de la camisa: <span id="colorNombre"></span></b></div>
+    <div id="colores" role="group" aria-label="Colores de camisa"></div>
+
+    <div class="step"><span>04</span><b>Tu diseño en <span id="ladoNombre">el frente</span></b></div>
+    <label class="upload2">＋ Subir logo o imagen<input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="tip">PNG con fondo transparente se ve mejor. Máximo 8 MB.</p></label>
+
+    <div class="step"><span>05</span><b>Cantidades por talla</b></div>
+    <label>¿Para quién?<select id="audience"><option>Hombre</option><option>Mujer</option><option>Niño</option><option>Niña</option></select></label>
+    <div class="sizes" id="sizes"></div>
+    <p style="margin:0">Total: <strong id="totalQty">1</strong> camisas</p>
+
+    <div class="price"><span>Total estimado</span><strong id="price">C$ 0</strong><small id="unit"></small><small>12+ camisas: 10 % menos • 24+ camisas: 18 % menos. IMPRESA confirma el precio por WhatsApp.</small></div>
+    <button type="button" class="btn full" id="add">Agregar a mi pedido</button>
+  </form>
+</div>
+</section>
+</main>
+<footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer>
+<script src="config.js"></script><script src="app.js"></script><script src="camisas.js"></script><script src="disena.js"></script>
+</body>
+</html>

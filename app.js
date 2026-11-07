@@ -1,8 +1,15 @@
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const CFG=window.IMPRESA||{};
 const money=n=>`C$ ${Math.round(n).toLocaleString('es-NI')}`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 $('#menu')?.addEventListener('click',()=>$('#nav')?.classList.toggle('open')); $$('#nav a').forEach(a=>a.addEventListener('click',()=>$('#nav')?.classList.remove('open')));
+
+/* ---------- Supabase (REST, sin librería) ---------- */
+const sbReady=()=>CFG.supabaseUrl&&CFG.supabaseKey;
+// clave sb_publishable_ va solo en apikey; una clave anon antigua (JWT) también en Authorization
+const sbHeaders=extra=>({apikey:CFG.supabaseKey,...(CFG.supabaseKey.startsWith('sb_')?{}:{Authorization:`Bearer ${CFG.supabaseKey}`}),...extra});
+async function sbGet(path){if(!sbReady())return null;try{const r=await fetch(`${CFG.supabaseUrl}/rest/v1/${path}`,{headers:sbHeaders()});return r.ok?await r.json():null}catch{return null}}
 
 /* ---------- Pedido (se guarda en este navegador hasta enviarlo; la web no cobra) ---------- */
 const CART_KEY='impresa-pedido';
@@ -12,67 +19,69 @@ function updateCount(){const n=getCart().reduce((a,i)=>a+i.qty,0);$$('#cartCount
 function addItem(item){const c=getCart();c.push(item);return setCart(c)}
 updateCount();
 
-/* ---------- Tienda ---------- */
-$$('.cart').forEach(b=>b.addEventListener('click',()=>{if(addItem({nombre:b.dataset.name,detalle:b.dataset.detail||'',qty:1,precio:+b.dataset.price}))$('#cartStatus').innerHTML=`Agregado a tu pedido. <a href="pedido.html"><u>Ver mi pedido</u></a>`}));
+/* ---------- Tienda (productos desde Supabase; si falla, quedan los del HTML) ---------- */
+document.addEventListener('click',e=>{const b=e.target.closest('.cart');if(!b)return;if(addItem({nombre:b.dataset.name,detalle:b.dataset.detail||'',qty:1,precio:+b.dataset.price}))$('#cartStatus').innerHTML=`Agregado a tu pedido. <a href="pedido.html"><u>Ver mi pedido</u></a>`});
+(async()=>{const box=$('.realProducts');if(!box)return;const rows=await sbGet('productos?select=nombre,detalle,precio,foto_url&activo=eq.true&order=orden,created_at');if(!rows?.length)return;
+  box.innerHTML=rows.map(p=>`<article><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"><h3>${esc(p.nombre)}</h3><p>${esc(p.detalle)}</p><strong>${money(p.precio)}</strong><button class="btn cart" data-name="${esc(p.nombre)}" data-detail="${esc(p.detalle)}" data-price="${+p.precio}">Agregar al carrito</button></article>`).join('')})();
 
-/* ---------- Diseña tu camisa ---------- */
-const techs=['Bordado','DTF','Serigrafía','Sublimación','Vinil']; let complex=false, designFile=null;
-function renderTech(){if(!$('#techs'))return; const material=$('#garment').value,box=$('#techs'),prev=$('input[name=tech]:checked')?.value;box.innerHTML='';let notes=[];
-  // conserva la técnica elegida si sigue permitida; si no, DTF (nunca se bloquea)
-  const allowed=t=>!(complex&&(t==='Vinil'||t==='Bordado'))&&!(t==='Sublimación'&&material!=='Camiseta'),pick=prev&&allowed(prev)?prev:'DTF';
-  techs.forEach((t,i)=>{let ok=true,msg='';if(complex&&t==='Vinil'){ok=false;msg='demasiado detalle/degradados para corte de vinil'}if(complex&&t==='Bordado'){ok=false;msg='requiere revisión por complejidad'}if(t==='Sublimación'&&material!=='Camiseta'){ok=false;msg='confirmar composición/material antes de sublimar'}const d=document.createElement('label');d.className='tech'+(ok?'':' disabled');d.innerHTML=`<span>${t}</span><input type="radio" name="tech" value="${t}" ${ok?'':'disabled'} ${t===pick?'checked':''}>`;box.appendChild(d);if(!ok)notes.push(`${t}: ${msg}.`)});$('#reason').textContent=notes.join(' ');calc()}
-function totalQty(){return $$('.qty').reduce((a,x)=>a+(+x.value||0),0)}
-function estimate(){const q=totalQty(),tech=$('input[name=tech]:checked')?.value||'DTF',base={Bordado:420,DTF:350,Serigrafía:320,Sublimación:360,Vinil:330}[tech],disc=q>=24?.82:q>=12?.9:1;return base*q*disc}
-function calc(){if(!$('#price'))return;$('#totalQty').textContent=totalQty();$('#price').textContent=money(estimate())}
-$('#config')?.addEventListener('submit',e=>e.preventDefault()); // Enter en un campo no debe recargar y perder el diseño
-$$('.qty').forEach(x=>x.addEventListener('input',calc));$('#garment')?.addEventListener('change',renderTech);$('#techs')?.addEventListener('change',calc);
-$('#audience')?.addEventListener('change',e=>{const map={Hombre:'Corte hombre',Mujer:'Corte mujer',Niño:'Corte infantil niño',Niña:'Corte infantil niña'};$('#viewNote').textContent=map[e.target.value]+' • arrastra la prenda para verla desde distintos ángulos.'});
-$('#color')?.addEventListener('input',e=>{const c=e.target.value;$('#model').style.background=`linear-gradient(90deg,color-mix(in srgb, ${c} 72%, #555),${c} 20%,color-mix(in srgb, ${c} 96%, white) 50%,${c} 80%,color-mix(in srgb, ${c} 72%, #555))`});
-$('#file')?.addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;complex=f.size>300000;const mark=$('#designMark'),r=new FileReader();r.onload=()=>{designFile={nombre:f.name,data:r.result};mark.textContent='';mark.style.background=`url(${r.result}) center/contain no-repeat`;mark.style.width='145px';mark.style.height='145px';mark.style.border='0'};r.readAsDataURL(f);renderTech()});
-$$('.tabs button').forEach(b=>b.addEventListener('click',()=>{$$('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');const angles={front:0,back:180,left:-75,right:75};rotY=angles[b.dataset.view]||0;applyRotation()}));
-let rotY=0,rotX=0,drag=false,lastX=0,lastY=0;function applyRotation(){if($('#model'))$('#model').style.transform=`rotateX(${rotX}deg) rotateY(${rotY}deg)`}const studio=$('#dragStudio');if(studio){const start=(x,y)=>{drag=true;lastX=x;lastY=y},move=(x,y)=>{if(!drag)return;rotY+=(x-lastX)*.65;rotX=Math.max(-18,Math.min(18,rotX-(y-lastY)*.18));lastX=x;lastY=y;applyRotation()},end=()=>drag=false;studio.addEventListener('pointerdown',e=>{studio.setPointerCapture(e.pointerId);start(e.clientX,e.clientY)});studio.addEventListener('pointermove',e=>move(e.clientX,e.clientY));studio.addEventListener('pointerup',end);studio.addEventListener('pointercancel',end)}
-$('#add')?.addEventListener('click',()=>{const q=totalQty();if(q<1){alert('Indica al menos una prenda en la distribución de tallas.');return}
-  const tallas=$$('.qty').map(x=>+x.value?`${x.closest('label').firstChild.textContent.trim()}: ${x.value}`:'').filter(Boolean).join(', ');
-  const tech=$('input[name=tech]:checked')?.value||'DTF';
-  const g=$('#garment').value;
-  const ok=addItem({nombre:`${g} ${g==='Polo'?'personalizado':'personalizada'}`,detalle:`${$('#audience').value} • color ${$('#color').value} • ${tech} • tallas ${tallas}${designFile?` • diseño: ${designFile.nombre}`:' • sin diseño subido'}`,qty:q,precio:estimate()/q,diseno:designFile});
-  if(ok)location.href='pedido.html'});
-
-/* ---------- Videos del proceso ---------- */
-$$('.video').forEach(b=>b.addEventListener('click',()=>{if($('#videoTitle'))$('#videoTitle').textContent=b.dataset.title;$('#videoModal')?.showModal()}));$('#closeModal')?.addEventListener('click',()=>$('#videoModal')?.close());renderTech();
+/* ---------- Videos del proceso (portada y Nosotros) ---------- */
+function youtubeId(u){const m=String(u).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/))([\w-]{11})/);return m?.[1]}
+function playVideo(title,url){const box=$('.videoBox');$('#videoTitle').textContent=title;const note=$('#videoNote');
+  if(url&&youtubeId(url)){box.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${youtubeId(url)}?autoplay=1&rel=0" title="${esc(title)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>`;if(note)note.hidden=true}
+  else if(url){box.innerHTML='';const v=document.createElement('video');v.src=url;v.controls=true;v.autoplay=true;v.playsInline=true;box.appendChild(v);if(note)note.hidden=true}
+  else{box.textContent='▶';if(note)note.hidden=false}
+  $('#videoModal').showModal()}
+document.addEventListener('click',e=>{const b=e.target.closest('.video');if(b&&$('#videoModal'))playVideo(b.dataset.title,b.dataset.video)});
+$('#closeModal')?.addEventListener('click',()=>$('#videoModal').close());
+$('#videoModal')?.addEventListener('close',()=>{$('.videoBox').textContent='▶'}); // detiene el video al cerrar
+(async()=>{const vids=$('.vids'),proc=$('#proceso.process');if(!vids&&!proc)return;const rows=await sbGet('videos?select=titulo,portada_url,video_url&activo=eq.true&order=orden,created_at');if(!rows?.length)return;
+  if(vids)vids.innerHTML=rows.slice(0,4).map(v=>`<button class="vid video" data-title="${esc(v.titulo)}" data-video="${esc(v.video_url||'')}"><img src="${esc(v.portada_url)}" alt="" loading="lazy"><span>${esc(v.titulo)}</span></button>`).join('');
+  if(proc){proc.querySelectorAll('.video').forEach(b=>b.remove());proc.insertAdjacentHTML('beforeend',rows.map(v=>`<button class="video" data-title="${esc(v.titulo)}" data-video="${esc(v.video_url||'')}">▶ ${esc(v.titulo)}</button>`).join(''))}})();
 
 /* ---------- Envío: Supabase (si está configurado) + WhatsApp ---------- */
-const sbReady=()=>CFG.supabaseUrl&&CFG.supabaseKey;
-// clave sb_publishable_ va solo en apikey; una clave anon antigua (JWT) también en Authorization
-const sbHeaders=extra=>({apikey:CFG.supabaseKey,...(CFG.supabaseKey.startsWith('sb_')?{}:{Authorization:`Bearer ${CFG.supabaseKey}`}),...extra});
-async function uploadDesign(d){const blob=await (await fetch(d.data)).blob(),ext=(d.nombre.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,''),path=`${crypto.randomUUID()}.${ext}`;
+async function uploadFile(d){const blob=await (await fetch(d.data)).blob(),ext=(d.nombre.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,''),path=`${crypto.randomUUID()}.${ext}`;
   const r=await fetch(`${CFG.supabaseUrl}/storage/v1/object/disenos/${path}`,{method:'POST',headers:sbHeaders({'Content-Type':blob.type||'application/octet-stream'}),body:blob});
   if(!r.ok)throw new Error('No se pudo subir el diseño');return `${CFG.supabaseUrl}/storage/v1/object/public/disenos/${path}`}
 async function saveRecord(row){if(!sbReady())return;const r=await fetch(`${CFG.supabaseUrl}/rest/v1/pedidos`,{method:'POST',headers:sbHeaders({'Content-Type':'application/json',Prefer:'return=minimal'}),body:JSON.stringify(row)});if(!r.ok)throw new Error('No se pudo guardar')}
 // misma pestaña: window.open después de un await lo bloquean los navegadores del móvil
 const openWhatsApp=text=>setTimeout(()=>location.href=`https://wa.me/${CFG.whatsapp}?text=${encodeURIComponent(text)}`,600);
 const field=(f,n)=>f.elements[n]?.value.trim()||'';
+const archivosDe=it=>it.archivos||(it.diseno?[it.diseno]:[]); // pedidos guardados antes del diseñador nuevo
 
 /* ---------- Página Mi pedido ---------- */
 function renderPedido(){const list=$('#pedidoItems');if(!list)return;const c=getCart();list.innerHTML='';
   $('#pedidoVacio').hidden=c.length>0;$('#pedidoForm').hidden=c.length===0;
   c.forEach((it,i)=>{const row=document.createElement('article');row.className='pedidoItem';
+    if(it.vista){const img=document.createElement('img');img.src=it.vista;img.alt='Vista de tu camisa';img.className='pedidoVista';row.appendChild(img)}
     const info=document.createElement('div'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=`${it.qty} × ${it.nombre}`;p.textContent=it.detalle;info.append(h,p);
     const right=document.createElement('div'),s=document.createElement('strong'),del=document.createElement('button');s.textContent=money(it.precio*it.qty);del.type='button';del.className='btn ghost';del.textContent='Quitar';del.onclick=()=>{const cc=getCart();cc.splice(i,1);setCart(cc);renderPedido()};right.append(s,del);
     row.append(info,right);list.appendChild(row)});
   $('#pedidoTotal').textContent=money(c.reduce((a,i)=>a+i.precio*i.qty,0))}
 renderPedido();
+
+// Opciones de entrega: puntos activos de Supabase + envío a domicilio
+const PUNTO_KEY='impresa-punto';
+(async()=>{const sel=$('#entrega');if(!sel)return;const pts=await sbGet('puntos_entrega?select=id,nombre,direccion,horario&activo=eq.true&order=orden,created_at')||[];
+  const opts=pts.map(p=>({v:`Punto de entrega: ${p.nombre} (${p.horario})`,t:`${p.nombre} — ${p.horario}`,id:p.id}));
+  if(!opts.length)opts.push({v:'Retiro en IMPRESA',t:'Retiro en IMPRESA'});
+  opts.push({v:'Envío a domicilio',t:'Envío a domicilio'});
+  sel.innerHTML=opts.map(o=>`<option value="${esc(o.v)}" data-id="${o.id||''}">${esc(o.t)}</option>`).join('');
+  let saved=null;try{saved=localStorage.getItem(PUNTO_KEY)}catch{}
+  const pre=[...sel.options].find(o=>saved&&o.dataset.id===saved);if(pre)sel.value=pre.value;
+  sel.dispatchEvent(new Event('change'))})();
+$('#entrega')?.addEventListener('change',e=>{$('#direccionBox').hidden=e.target.value!=='Envío a domicilio';$('#direccionBox input').required=e.target.value==='Envío a domicilio'});
+
 $('#pedidoForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,btn=f.querySelector('button[type=submit]'),st=$('#pedidoStatus'),c=getCart();if(!c.length)return;
   btn.disabled=true;st.textContent='Enviando…';
-  try{const items=[];for(const it of c){let diseno=null;if(it.diseno&&sbReady())diseno=await uploadDesign(it.diseno);items.push({nombre:it.nombre,detalle:it.detalle,cantidad:it.qty,precio_unitario:Math.round(it.precio),diseno})}
+  try{const items=[];for(const it of c){const links=[];if(sbReady()){for(const a of archivosDe(it))links.push(`${a.lado?a.lado+': ':''}${await uploadFile(a)}`);if(it.vista)links.push(`Vista: ${await uploadFile({nombre:'vista.jpg',data:it.vista})}`)}
+      items.push({nombre:it.nombre,detalle:it.detalle,cantidad:it.qty,precio_unitario:Math.round(it.precio),archivos:links})}
     const total=c.reduce((a,i)=>a+i.precio*i.qty,0),row={tipo:'pedido',nombre:field(f,'nombre'),telefono:field(f,'telefono'),correo:field(f,'correo')||null,entrega:field(f,'entrega'),direccion:field(f,'direccion')||null,notas:field(f,'notas')||null,items,total_estimado:Math.round(total)};
     await saveRecord(row);
-    const lines=items.map(i=>`• ${i.cantidad} × ${i.nombre} — ${i.detalle} — ${money(i.precio_unitario*i.cantidad)}${i.diseno?`\n  Diseño: ${i.diseno}`:''}`);
-    const sinSubir=c.some(i=>i.diseno)&&!sbReady()?'\n(Te envío el diseño en este chat.)':'';
+    const lines=items.map(i=>`• ${i.cantidad} × ${i.nombre} — ${i.detalle} — ${money(i.precio_unitario*i.cantidad)}${i.archivos.map(l=>`\n  ${l}`).join('')}`);
+    const sinSubir=c.some(i=>archivosDe(i).length)&&!sbReady()?'\n(Te envío el diseño en este chat.)':'';
     openWhatsApp(`Hola IMPRESA, quiero hacer este pedido:\n${lines.join('\n')}\nTotal estimado: ${money(total)}\n\nNombre: ${row.nombre}\nTeléfono: ${row.telefono}${row.correo?`\nCorreo: ${row.correo}`:''}\nEntrega: ${row.entrega}${row.direccion?`\nDirección: ${row.direccion}`:''}${row.notas?`\nNotas: ${row.notas}`:''}${sinSubir}`);
-    setCart([]);renderPedido();$('#pedidoVacio').hidden=true;st.textContent='¡Pedido enviado! Te confirmamos precio, pago y entrega por WhatsApp.'}
+    setCart([]);renderPedido();$('#pedidoVacio').hidden=true;st.textContent='¡Pedido enviado! Te confirmamos precio y entrega por WhatsApp.'}
   catch(err){st.textContent=`${err.message}. Revisa tu conexión e inténtalo de nuevo.`}finally{btn.disabled=false}});
-$('#entrega')?.addEventListener('change',e=>{$('#direccionBox').hidden=e.target.value!=='Envío'});
 
 /* ---------- Contacto / cotización ---------- */
 $('#contactForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,btn=f.querySelector('button[type=submit]'),st=$('#contactStatus');btn.disabled=true;st.textContent='Enviando…';

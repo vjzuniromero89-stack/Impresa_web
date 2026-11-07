@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#061426">
+<meta name="robots" content="noindex,nofollow">
+<title>Administrador | IMPRESA</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<link rel="stylesheet" href="styles.css">
+<style>
+.adm{max-width:1180px;margin:auto;padding:30px 4% 60px}
+.login{max-width:420px;margin:60px auto}
+.tabsA{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;border-bottom:1px solid #1d4d77;padding-bottom:12px}
+.tabsA button{background:#102b47;border:1px solid #24577f;color:#cce7ff;padding:11px 16px;border-radius:9px;font-weight:700;cursor:pointer}
+.tabsA button.on{background:#1b9ce9;color:#fff;border-color:#1b9ce9}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.top h2{font-size:28px;margin:0;letter-spacing:0}
+.fila{display:grid;grid-template-columns:120px 1fr;gap:16px;background:#0b2037;border:1px solid #1d4d77;border-radius:14px;padding:14px;margin-bottom:12px}
+.fila.nueva{border-color:#29a8ff}
+.fila.inactiva{opacity:.6}
+.thumb{width:120px;height:120px;border-radius:10px;object-fit:cover;background:#07182a;display:block}
+.campos{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;align-items:end}
+.campos label{font-size:12px}
+.campos input,.campos select{margin-top:4px;padding:9px}
+.campos .ancho{grid-column:1/-1}
+.chk{display:flex;gap:8px;align-items:center}.chk input{width:auto;margin:0}
+.acc{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.acc .btn{padding:9px 14px;font-size:13px}
+.btn.rojo{background:#b3261e}
+.msg{font-size:13px;color:#9fc0da}.msg.ok{color:#50d899}.msg.err{color:#ff8a80}
+.fileBtn{display:inline-block;margin-top:8px;font-size:12px;color:#64c3ff;cursor:pointer;text-decoration:underline}
+.fileBtn input{display:none}
+#mapaAdm{height:420px;border-radius:14px;border:1px solid #1d4d77;margin-bottom:14px;z-index:0}
+.pin{width:30px;height:30px;border-radius:50% 50% 50% 0;background:#1f78ff;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 3px 8px #0006;display:grid;place-items:center}
+.pin span{transform:rotate(45deg);color:#fff;font-weight:800;font-size:13px}
+.ped{background:#0b2037;border:1px solid #1d4d77;border-radius:14px;padding:14px;margin-bottom:10px;display:grid;gap:6px}
+.ped header{all:unset;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ped p{margin:0;color:#b8d0e3;font-size:13px;white-space:pre-line}
+.ped a{color:#64c3ff;text-decoration:underline}
+.ped select{width:auto;padding:7px;margin:0}
+@media(max-width:600px){.fila{grid-template-columns:1fr}.thumb{width:100%;height:180px}}
+</style>
+</head>
+<body>
+<header><a class="brand" href="index.html"><span>IM</span>PRESA<small>ADMINISTRADOR</small></a><button id="salir" class="btn ghost" style="margin-left:auto" hidden>Cerrar sesión</button></header>
+<main class="adm">
+  <form id="login" class="contactForm login" hidden>
+    <h1 style="font-size:32px;margin:0;letter-spacing:0">Entrar</h1>
+    <label>Correo<input name="email" type="email" required autocomplete="username"></label>
+    <label>Contraseña<input name="password" type="password" required autocomplete="current-password"></label>
+    <button class="btn" type="submit">Entrar</button>
+    <p id="loginMsg" class="msg" role="status"></p>
+  </form>
+
+  <div id="panel" hidden>
+    <nav class="tabsA" aria-label="Secciones"><button data-tab="productos" class="on">Tienda</button><button data-tab="videos">Videos</button><button data-tab="puntos">Puntos de entrega</button><button data-tab="pedidos">Pedidos</button></nav>
+    <section data-sec="productos"><div class="top"><h2>Productos de la tienda</h2><button class="btn" data-nuevo="productos">+ Agregar producto</button></div><div id="lista-productos"></div></section>
+    <section data-sec="videos" hidden><div class="top"><h2>Videos del proceso</h2><button class="btn" data-nuevo="videos">+ Agregar video</button></div><p class="msg">Los 4 primeros (por orden) salen en la portada; todos salen en Nosotros. El video puede ser un archivo MP4 de hasta 50 MB o un enlace de YouTube.</p><div id="lista-videos"></div></section>
+    <section data-sec="puntos" hidden><div class="top"><h2>Puntos de entrega</h2><button class="btn" data-nuevo="puntos">+ Agregar punto</button></div><p class="msg">Haz clic en el mapa para ubicar el punto que estás editando, o arrastra su marcador.</p><div id="mapaAdm"></div><div id="lista-puntos"></div></section>
+    <section data-sec="pedidos" hidden><div class="top"><h2>Pedidos y mensajes</h2><button class="btn ghost" id="recargarPed">Actualizar</button></div><div id="lista-pedidos"></div></section>
+  </div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script><script src="admin.js"></script>
+</body>
+</html>
