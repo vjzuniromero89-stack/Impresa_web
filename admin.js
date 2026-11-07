@@ -60,7 +60,7 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
   if(def.foto){const img=document.createElement('img');img.className='thumb';img.alt='';if(row[def.foto])img.src=row[def.foto];
     const lb=document.createElement('label');lb.className='fileBtn';const ft=def.fotoTxt||'foto';lb.textContent=row[def.foto]?`Cambiar ${ft}`:`Subir ${ft}`;const inp=document.createElement('input');inp.type='file';inp.accept='image/png,image/jpeg,image/webp';
     inp.onchange=()=>{const f=inp.files[0];if(!f)return;nuevaFoto=f;img.src=URL.createObjectURL(f);lb.firstChild.textContent='Foto lista para guardar'};lb.appendChild(inp);izq.append(img,lb);
-    if(t==='disenos'&&row.preview_url){const descargar=document.createElement('button');descargar.type='button';descargar.className='btn ghost';descargar.style.cssText='margin-top:10px;padding:8px;font-size:12px';descargar.textContent='⬇ Descargar vista PNG';
+    if(t==='disenos'&&row.preview_url){const descargar=document.createElement('button');descargar.type='button';descargar.className='btn ghost';descargar.style.cssText='margin-top:10px;padding:8px;font-size:12px';descargar.textContent='⬇ Descargar PNG';
       const aviso=document.createElement('span');aviso.className='msg';aviso.style.display='block';
       descargar.onclick=async()=>{descargar.disabled=true;aviso.textContent='Preparando descarga…';
         try{const r=await fetch(row.preview_url);if(!r.ok)throw new Error('No se pudo descargar la vista.');
