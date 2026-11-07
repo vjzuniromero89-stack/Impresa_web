@@ -73,12 +73,12 @@ $('#entrega')?.addEventListener('change',e=>{$('#direccionBox').hidden=e.target.
 
 $('#pedidoForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,btn=f.querySelector('button[type=submit]'),st=$('#pedidoStatus'),c=getCart();if(!c.length)return;
   btn.disabled=true;st.textContent='Enviando…';
-  try{const items=[];for(const it of c){const links=[];if(sbReady()){for(const a of archivosDe(it))links.push(`${a.lado?a.lado+': ':''}${await uploadFile(a)}`);if(it.vista)links.push(`Vista: ${await uploadFile({nombre:'vista.jpg',data:it.vista})}`)}
+  try{const items=[];for(const it of c){const links=[];if(sbReady()){for(const a of archivosDe(it))links.push(`${a.lado?a.lado+': ':''}${a.codigo?`diseño de catálogo ${a.codigo}`:a.url||await uploadFile(a)}`);if(it.vista)links.push(`Vista: ${await uploadFile({nombre:'vista.jpg',data:it.vista})}`)}
       items.push({nombre:it.nombre,detalle:it.detalle,cantidad:it.qty,precio_unitario:Math.round(it.precio),archivos:links})}
     const total=c.reduce((a,i)=>a+i.precio*i.qty,0),row={tipo:'pedido',nombre:field(f,'nombre'),telefono:field(f,'telefono'),correo:field(f,'correo')||null,entrega:field(f,'entrega'),direccion:field(f,'direccion')||null,notas:field(f,'notas')||null,items,total_estimado:Math.round(total)};
     await saveRecord(row);
     const lines=items.map(i=>`• ${i.cantidad} × ${i.nombre} — ${i.detalle} — ${money(i.precio_unitario*i.cantidad)}${i.archivos.map(l=>`\n  ${l}`).join('')}`);
-    const sinSubir=c.some(i=>archivosDe(i).length)&&!sbReady()?'\n(Te envío el diseño en este chat.)':'';
+    const sinSubir=c.some(i=>archivosDe(i).some(a=>a.data))&&!sbReady()?'\n(Te envío el diseño en este chat.)':'';
     openWhatsApp(`Hola IMPRESA, quiero hacer este pedido:\n${lines.join('\n')}\nTotal estimado: ${money(total)}\n\nNombre: ${row.nombre}\nTeléfono: ${row.telefono}${row.correo?`\nCorreo: ${row.correo}`:''}\nEntrega: ${row.entrega}${row.direccion?`\nDirección: ${row.direccion}`:''}${row.notas?`\nNotas: ${row.notas}`:''}${sinSubir}`);
     setCart([]);renderPedido();$('#pedidoVacio').hidden=true;st.textContent='¡Pedido enviado! Te confirmamos precio y entrega por WhatsApp.'}
   catch(err){st.textContent=`${err.message}. Revisa tu conexión e inténtalo de nuevo.`}finally{btn.disabled=false}});

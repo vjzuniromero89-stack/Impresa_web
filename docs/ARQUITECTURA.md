@@ -74,3 +74,9 @@ Local: `python -m http.server` (preview `impresa-web`, puerto 4393) contra el Su
 
 ## Galería de ejemplos
 Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfield sobre verde y recortados (ssets/disenos-anime/); fotos de ejemplo en ssets/galeria/. «Pedir esta camisa» abre disena.html?prenda&color&lado&diseno; diseno solo acepta ssets/disenos-anime/*.png. No se hacen personajes de franquicias con derechos (p. ej. Dragon Ball).
+
+## Catálogo de diseños (2026-11-07)
+- Tabla disenos (codigo D001…, nombre, categoria, preview_url, archivo, orden, activo); página disenos.html con filtro por categoría; «Usar este diseño» → disena.html?diseno=…&dn=D007.
+- Archivo de impresión: bucket **privado** impresion (solo es_admin()), PNG sin fondo a 300 DPI (~30–35 cm), ampliado 4x con Real-ESRGAN ealesrgan-x4plus-anime (D:\herramientas\realesrgan). Copia local y scripts en D:\proyectos\impresa-disenos-impresion.
+- Panel: pestaña Diseños (vista pública + archivo de impresión, descarga con enlace firmado de 10 min); en Pedidos, botón «⬇ D007 para imprimir».
+- Carrito: los diseños del cliente se suben a disenos al agregarlos (el carrito en localStorage solo guarda el enlace); los del catálogo solo guardan el código.

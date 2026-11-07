@@ -25,14 +25,15 @@ function limitar(d,lado=st.lado){const z=P().zonas[lado];d.cm=Math.min(d.cm,maxC
   d.cx=Math.min(Math.max(d.cx,z.x+w/2),z.x+z.w-w/2);d.cy=Math.min(Math.max(d.cy,z.y+h/2),z.y+z.h-h/2)}
 
 $('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.value='';if(f)usarArchivo(f)});
-// Diseño listo de la Galería (?diseno=…): solo archivos del propio sitio
-const disenoListo=qs.get('diseno');
-if(disenoListo&&/^assets\/disenos-anime\/[\w-]+\.png$/.test(disenoListo))fetch(disenoListo).then(r=>r.ok?r.blob():null).then(b=>b&&usarArchivo(new File([b],disenoListo.split('/').pop(),{type:'image/png'})));
-function usarArchivo(f){
+// Diseño del catálogo o la Galería (?diseno=…&dn=D007): solo archivos del sitio o del Storage público del proyecto
+const disenoListo=qs.get('diseno'),codigoDiseno=/^D\d{3,5}$/.test(qs.get('dn')||'')?qs.get('dn'):null;
+const permitido=u=>/^assets\/disenos-anime\/[\w-]+\.png$/.test(u)||u.startsWith(`${CFG.supabaseUrl}/storage/v1/object/public/media/`);
+if(disenoListo&&permitido(disenoListo))fetch(disenoListo).then(r=>r.ok?r.blob():null).then(b=>b&&usarArchivo(new File([b],disenoListo.split('/').pop().split('?')[0],{type:b.type||'image/png'}),codigoDiseno));
+function usarArchivo(f,codigo=null){
   if(!/^image\/(png|jpeg|webp|svg\+xml)$/.test(f.type)){alert('Sube una imagen PNG, JPG, WEBP o SVG.');return}
   if(f.size>8e6){alert('La imagen pesa más de 8 MB. Prueba con una más liviana.');return}
   const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const ratio=img.naturalHeight/img.naturalWidth||1,z=Z();
-    const d={nombre:f.name,data:r.result,ratio,cm:Math.min(st.prenda==='waffit'&&st.lado==='frente'?10:25,maxCm(ratio)),cx:z.x+z.w/2,cy:z.y};d.cy=z.y+d.cm*PCT_CM*ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
+    const d={nombre:f.name,codigo,data:r.result,ratio,cm:Math.min(st.prenda==='waffit'&&st.lado==='frente'?10:25,maxCm(ratio)),cx:z.x+z.w/2,cy:z.y};d.cy=z.y+d.cm*PCT_CM*ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
 $('#cm').addEventListener('input',e=>{const d=st.lados[st.lado];if(!d)return;d.cm=+e.target.value;limitar(d);mostrarDiseno()});
 $('#centrar').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;d.cx=Z().x+Z().w/2;limitar(d);mostrarDiseno()});
 $('#quitar').addEventListener('click',()=>{st.lados[st.lado]=null;mostrarDiseno();calc()});
@@ -80,11 +81,17 @@ async function vista(){const lados=['frente','espalda'].filter(l=>st.lados[l]),c
 $('#add').addEventListener('click',async()=>{const q=totalQty();if(q<1){alert('Indica cuántas camisas quieres en cada talla.');return}
   if(!st.lados.frente&&!st.lados.espalda&&!confirm('No subiste ningún diseño. ¿Agregar la camisa igual y enviar el diseño por WhatsApp?'))return;
   const tallas=$$('.qty').filter(x=>+x.value>0).map(x=>`${x.dataset.talla}: ${Math.floor(+x.value)}`).join(', ');
-  const lados=['frente','espalda'].filter(l=>st.lados[l]).map(l=>`${l} ${st.lados[l].cm} cm`).join(' + ')||'sin diseño subido';
-  const color=st.color.codigo?`${st.color.nombre} ${st.color.codigo}`:st.color.nombre;
-  const ok=addItem({nombre:`${P().corto} Klasiko ${st.tec}`,detalle:`${$('#audience').value} • ${color} • ${lados} • tallas ${tallas}`,qty:q,precio:unitario(),
-    archivos:['frente','espalda'].filter(l=>st.lados[l]).map(l=>({lado:l,nombre:st.lados[l].nombre,data:st.lados[l].data})),vista:await vista()});
-  if(ok)location.href='pedido.html'});
+  const lados=['frente','espalda'].filter(l=>st.lados[l]).map(l=>`${l} ${st.lados[l].cm} cm${st.lados[l].codigo?` diseño ${st.lados[l].codigo}`:''}`).join(' + ')||'sin diseño subido';
+  const color=st.color.codigo?`${st.color.nombre} ${st.color.codigo}`:st.color.nombre,btn=$('#add'),txt=btn.textContent;
+  // el carrito vive en localStorage (≈5 MB): el diseño del cliente se sube ya y se guarda solo su enlace
+  btn.disabled=true;btn.textContent='Guardando tu diseño…';
+  try{const archivos=[];for(const l of ['frente','espalda']){const d=st.lados[l];if(!d)continue;
+      if(d.codigo)archivos.push({lado:l,nombre:d.nombre,codigo:d.codigo});
+      else archivos.push(sbReady()?{lado:l,nombre:d.nombre,url:await uploadFile(d)}:{lado:l,nombre:d.nombre,data:d.data})}
+    const ok=addItem({nombre:`${P().corto} Klasiko ${st.tec}`,detalle:`${$('#audience').value} • ${color} • ${lados} • tallas ${tallas}`,qty:q,precio:unitario(),archivos,vista:await vista()});
+    if(ok)location.href='pedido.html'}
+  catch(err){alert(`${err.message}. Revisa tu conexión e inténtalo de nuevo.`)}
+  finally{btn.disabled=false;btn.textContent=txt}});
 
 renderTallas();colocarZona();
 cargarPrenda(st.prenda).then(()=>{$$('input[name=prenda]').find(r=>r.checked)?.dispatchEvent(new Event('change'))});

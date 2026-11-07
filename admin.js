@@ -30,12 +30,18 @@ async function subir(file,carpeta){if(file.size>50*1024*1024)throw new Error('El
 const TABLAS={
   productos:{orden:'orden',foto:'foto_url',carpeta:'productos',vacio:{nombre:'',detalle:'',precio:0,foto_url:'',orden:99,activo:true},
     campos:[['nombre','Nombre','text',1],['detalle','Detalle (ej. Algodón • Unisex)','text'],['precio','Precio C$','number',1],['orden','Orden','number'],['activo','Visible en la web','check']]},
+  disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,orden:99,activo:true},
+    campos:[['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   videos:{orden:'orden',foto:'portada_url',carpeta:'videos',vacio:{titulo:'',portada_url:'',video_url:'',orden:99,activo:true},
     campos:[['titulo','Título','text',1],['video_url','Video: enlace de YouTube o archivo','video'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   puntos_entrega:{orden:'orden',vacio:{nombre:'',direccion:'',referencia:'',horario:'12:00 m – 2:00 pm',lat:null,lng:null,orden:99,activo:true},
     campos:[['nombre','Nombre del punto','text',1],['direccion','Dirección','text'],['referencia','Referencia (ej. frente a…)','text'],['horario','Horario','text'],['lat','Latitud','number',1],['lng','Longitud','number',1],['orden','Orden','number'],['activo','Visible en la web','check']]}
 };
-const caja={productos:'#lista-productos',videos:'#lista-videos',puntos_entrega:'#lista-puntos'};
+const caja={productos:'#lista-productos',disenos:'#lista-disenos',videos:'#lista-videos',puntos_entrega:'#lista-puntos'};
+// Archivo de impresión: bucket privado; se descarga con un enlace temporal de 10 minutos
+async function descargarImpresion(ruta,btn){const t=btn.textContent;btn.textContent='Preparando…';
+  const {data,error}=await sb.storage.from('impresion').createSignedUrl(ruta,600,{download:true});btn.textContent=t;
+  if(error){alert('No se pudo descargar: '+error.message);return}location.href=data.signedUrl}
 const tabla=t=>t==='puntos'?'puntos_entrega':t;
 let filasPuntos=[];
 
@@ -50,13 +56,18 @@ $$('[data-nuevo]').forEach(b=>b.addEventListener('click',()=>{const t=tabla(b.da
 
 function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');el.className='fila'+(row.id?'':' nueva')+(row.activo===false?' inactiva':'');
   const izq=document.createElement('div'),campos=document.createElement('div');campos.className='campos';
-  let nuevaFoto=null,nuevoVideo=null;
+  let nuevaFoto=null,nuevoVideo=null,nuevaImpresion=null;
   if(def.foto){const img=document.createElement('img');img.className='thumb';img.alt='';if(row[def.foto])img.src=row[def.foto];
-    const lb=document.createElement('label');lb.className='fileBtn';lb.textContent=row[def.foto]?'Cambiar foto':'Subir foto';const inp=document.createElement('input');inp.type='file';inp.accept='image/png,image/jpeg,image/webp';
+    const lb=document.createElement('label');lb.className='fileBtn';const ft=def.fotoTxt||'foto';lb.textContent=row[def.foto]?`Cambiar ${ft}`:`Subir ${ft}`;const inp=document.createElement('input');inp.type='file';inp.accept='image/png,image/jpeg,image/webp';
     inp.onchange=()=>{const f=inp.files[0];if(!f)return;nuevaFoto=f;img.src=URL.createObjectURL(f);lb.firstChild.textContent='Foto lista para guardar'};lb.appendChild(inp);izq.append(img,lb)}
   else{const n=document.createElement('div');n.className='pin';n.style.margin='10px auto';n.innerHTML=`<span>${i==null?'+':i+1}</span>`;izq.appendChild(n)}
-  for(const [k,label,tipo,req] of def.campos){const lb=document.createElement('label');
-    if(tipo==='check'){lb.className='chk';const c=document.createElement('input');c.type='checkbox';c.name=k;c.checked=!!row[k];lb.append(c,label)}
+  for(const [k,label,tipo,req] of def.campos){const lb=document.createElement(tipo==='impresion'?'div':'label');
+    if(tipo==='impresion'){lb.className='ancho';const t=document.createElement('b');t.style.fontSize='12px';t.textContent=label;const fila2=document.createElement('div');fila2.className='acc';fila2.style.marginTop='4px';
+      if(row.archivo){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='⬇ Descargar para imprimir';b.onclick=()=>descargarImpresion(row.archivo,b);const n=document.createElement('span');n.className='msg';n.textContent=row.archivo.split('/').pop();fila2.append(b,n)}
+      else{const n=document.createElement('span');n.className='msg err';n.textContent='Falta el archivo de impresión';fila2.append(n)}
+      const fb=document.createElement('label');fb.className='fileBtn';fb.textContent=row.archivo?'Reemplazar archivo de impresión':'Subir archivo de impresión';const fi=document.createElement('input');fi.type='file';fi.accept='image/png,image/jpeg,image/webp,image/svg+xml,application/pdf';
+      fi.onchange=()=>{nuevaImpresion=fi.files[0];if(nuevaImpresion)fb.firstChild.textContent=`Se subirá: ${nuevaImpresion.name} (${(nuevaImpresion.size/1e6).toFixed(1)} MB)`};fb.appendChild(fi);lb.append(t,fila2,fb)}
+    else if(tipo==='check'){lb.className='chk';const c=document.createElement('input');c.type='checkbox';c.name=k;c.checked=!!row[k];lb.append(c,label)}
     else if(tipo==='video'){lb.className='ancho';lb.append(label);const c=document.createElement('input');c.name=k;c.type='url';c.placeholder='https://youtu.be/… (o sube un archivo abajo)';c.value=row[k]||'';lb.append(c);
       const fb=document.createElement('label');fb.className='fileBtn';fb.textContent='Subir archivo de video (MP4, máx. 50 MB)';const fi=document.createElement('input');fi.type='file';fi.accept='video/mp4,video/webm,video/quicktime';fi.onchange=()=>{nuevoVideo=fi.files[0];if(nuevoVideo){c.value='';c.placeholder=`Se subirá: ${nuevoVideo.name}`}};fb.appendChild(fi);lb.append(fb)}
     else{lb.append(label);const c=document.createElement('input');c.name=k;c.type=tipo;if(tipo==='number')c.step='any';c.required=!!req;c.value=row[k]??'';if(k==='lat'||k==='lng')c.readOnly=true;lb.append(c)}
@@ -67,7 +78,7 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
   acc.append(msg);campos.appendChild(Object.assign(document.createElement('div'),{className:'ancho'}));campos.lastChild.appendChild(acc);
   el.append(izq,campos);
 
-  g.onclick=async()=>{const datos={};for(const [k,,tipo,req] of def.campos){const c=campos.querySelector(`[name=${k}]`);
+  g.onclick=async()=>{const datos={};for(const [k,,tipo,req] of def.campos){if(tipo==='impresion')continue;const c=campos.querySelector(`[name=${k}]`);
       const v=tipo==='check'?c.checked:tipo==='number'?(c.value===''?null:+c.value):c.value.trim();
       if(req&&(v===''||v==null)){msg.className='msg err';msg.textContent=k==='lat'||k==='lng'?'Haz clic en el mapa para ubicar el punto.':'Completa los campos obligatorios.';c.focus?.();return}
       datos[k]=tipo==='text'||tipo==='video'?(v||(k==='video_url'?null:'')):v}
@@ -75,6 +86,10 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
     g.disabled=true;msg.className='msg';msg.textContent='Guardando…';
     try{if(nuevaFoto)datos[def.foto]=await subir(nuevaFoto,def.carpeta);
       if(nuevoVideo)datos.video_url=await subir(nuevoVideo,'videos');
+      if(nuevaImpresion){if(!/^D\d{3,5}$/.test(datos.codigo||''))throw new Error('El código debe ser como D011.');
+        const ext=(nuevaImpresion.name.split('.').pop()||'png').toLowerCase().replace(/[^a-z0-9]/g,''),slug=(datos.nombre||'').normalize('NFD').replace(/[^\w\s-]/g,'').trim().toLowerCase().replace(/\s+/g,'-').slice(0,40)||'diseno',ruta=`catalogo/${datos.codigo}-${slug}.${ext}`;
+        if(nuevaImpresion.size>50*1024*1024)throw new Error('El archivo de impresión pasa de 50 MB.');
+        const {error:e2}=await sb.storage.from('impresion').upload(ruta,nuevaImpresion,{contentType:nuevaImpresion.type,upsert:true});if(e2)throw new Error('No se pudo subir el archivo de impresión: '+e2.message);datos.archivo=ruta}
       const q=row.id?sb.from(t).update(datos).eq('id',row.id):sb.from(t).insert(datos);const {error}=await q;if(error)throw error;
       msg.className='msg ok';msg.textContent='Guardado ✓';setTimeout(()=>cargar(t==='puntos_entrega'?'puntos':t),700)}
     catch(err){msg.className='msg err';msg.textContent=err.message||'No se pudo guardar'}finally{g.disabled=false}};
@@ -109,7 +124,10 @@ async function pedidos(){const box=$('#lista-pedidos');box.innerHTML='<p class="
     el.querySelector('header .msg').textContent=new Date(p.created_at).toLocaleString('es-NI');
     const cli=el.querySelector('.cliente');cli.textContent=`Tel: ${p.telefono}${p.correo?' · '+p.correo:''}${p.entrega?'\nEntrega: '+p.entrega:''}${p.direccion?'\nDirección: '+p.direccion:''}${p.notas?'\nNotas: '+p.notas:''}`;
     if(wa){const a=document.createElement('a');a.href=wa;a.target='_blank';a.rel='noopener';a.textContent=' Abrir WhatsApp';cli.append(' ',a)}
-    const it=el.querySelector('.items');(p.items||[]).forEach(i=>{it.append(`• ${i.cantidad} × ${i.nombre} — ${i.detalle||''}\n`);(i.archivos||(i.diseno?[i.diseno]:[])).forEach(l=>{const url=String(l).match(/https:\/\/\S+/)?.[0];if(!url)return;const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.textContent=String(l).split(': ')[0]==url?'Ver archivo':String(l).split(': ')[0];it.append('   ',a,'\n')})});
+    const it=el.querySelector('.items');(p.items||[]).forEach(i=>{it.append(`• ${i.cantidad} × ${i.nombre} — ${i.detalle||''}\n`);
+      // diseños del catálogo (D007…): botón directo al archivo de impresión
+      for(const cod of new Set(String(i.detalle||'').match(/\bD\d{3,5}\b/g)||[])){const b=document.createElement('button');b.type='button';b.className='btn';b.style.cssText='padding:6px 10px;font-size:12px;margin:2px 6px 6px 0';b.textContent=`⬇ ${cod} para imprimir`;
+        b.onclick=async()=>{const {data}=await sb.from('disenos').select('archivo').eq('codigo',cod).maybeSingle();if(!data?.archivo){alert(`El diseño ${cod} no tiene archivo de impresión.`);return}descargarImpresion(data.archivo,b)};it.append(b)}(i.archivos||(i.diseno?[i.diseno]:[])).forEach(l=>{const url=String(l).match(/https:\/\/\S+/)?.[0];if(!url)return;const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.textContent=String(l).split(': ')[0]==url?'Ver archivo':String(l).split(': ')[0];it.append('   ',a,'\n')})});
     const sel=el.querySelector('select'),m=el.querySelector('.acc .msg');sel.innerHTML=ESTADOS.map(s=>`<option ${s===p.estado?'selected':''}>${s}</option>`).join('');
     sel.onchange=async()=>{const {error}=await sb.from('pedidos').update({estado:sel.value}).eq('id',p.id);m.className=error?'msg err':'msg ok';m.textContent=error?error.message:'Guardado ✓'};
     box.appendChild(el)}}

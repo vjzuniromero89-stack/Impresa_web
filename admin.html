@@ -52,8 +52,9 @@
   </form>
 
   <div id="panel" hidden>
-    <nav class="tabsA" aria-label="Secciones"><button data-tab="productos" class="on">Tienda</button><button data-tab="videos">Videos</button><button data-tab="puntos">Puntos de entrega</button><button data-tab="pedidos">Pedidos</button></nav>
+    <nav class="tabsA" aria-label="Secciones"><button data-tab="productos" class="on">Tienda</button><button data-tab="disenos">Diseños</button><button data-tab="videos">Videos</button><button data-tab="puntos">Puntos de entrega</button><button data-tab="pedidos">Pedidos</button></nav>
     <section data-sec="productos"><div class="top"><h2>Productos de la tienda</h2><button class="btn" data-nuevo="productos">+ Agregar producto</button></div><div id="lista-productos"></div></section>
+    <section data-sec="disenos" hidden><div class="top"><h2>Diseños listos</h2><button class="btn" data-nuevo="disenos">+ Agregar diseño</button></div><p class="msg">La <b>vista</b> es la imagen que ven los clientes (PNG sin fondo, unos 1000 px). El <b>archivo de impresión</b> es el de alta calidad para la máquina (PNG sin fondo, 300 DPI, unos 3500 px de ancho); solo lo ven los administradores.</p><div id="lista-disenos"></div></section>
     <section data-sec="videos" hidden><div class="top"><h2>Videos del proceso</h2><button class="btn" data-nuevo="videos">+ Agregar video</button></div><p class="msg">Los 4 primeros (por orden) salen en la portada; todos salen en Nosotros. El video puede ser un archivo MP4 de hasta 50 MB o un enlace de YouTube.</p><div id="lista-videos"></div></section>
     <section data-sec="puntos" hidden><div class="top"><h2>Puntos de entrega</h2><button class="btn" data-nuevo="puntos">+ Agregar punto</button></div><p class="msg">Haz clic en el mapa para ubicar el punto que estás editando, o arrastra su marcador.</p><div id="mapaAdm"></div><div id="lista-puntos"></div></section>
     <section data-sec="pedidos" hidden><div class="top"><h2>Pedidos y mensajes</h2><button class="btn ghost" id="recargarPed">Actualizar</button></div><div id="lista-pedidos"></div></section>
