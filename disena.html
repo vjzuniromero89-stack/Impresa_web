@@ -56,7 +56,7 @@
   <div class="dzPrev">
     <div class="ladoTabs"><button type="button" class="ladoBtn active" data-lado="frente">Frente</button><button type="button" class="ladoBtn" data-lado="espalda">Espalda</button></div>
     <div id="stage"><canvas id="shirt" width="800" height="800" role="img" aria-label="Vista de la camiseta"></canvas><div id="zona" class="vacia"></div><img id="designImg" alt="Tu diseño" hidden draggable="false"></div>
-    <div id="sizeBox" hidden><label for="cm" style="flex-basis:100%">Tamaño: <span id="cmTxt"></span></label><input id="cm" type="range" min="5" max="30" step="1"><button type="button" class="btn ghost" id="centrar">Centrar</button><button type="button" class="btn ghost" id="quitar" hidden>Quitar</button></div>
+    <div id="sizeBox" hidden><label for="cm" style="flex-basis:100%">Tamaño: <span id="cmTxt"></span></label><input id="cm" type="range" min="5" max="30" step="1"><button type="button" class="btn ghost" id="centrar">Centrar</button><button type="button" class="btn ghost" id="fondoBtn" hidden>Poner fondo</button><button type="button" class="btn ghost" id="quitar" hidden>Quitar</button></div>
     <p class="hint">Arrastra tu diseño con el dedo o el mouse. La línea punteada es el área que se puede imprimir.</p>
   </div>
 
@@ -79,7 +79,7 @@
     <div id="colores" role="group" aria-label="Colores de camisa"></div>
 
     <div class="step"><span>04</span><b>Tu diseño en <span id="ladoNombre">el frente</span></b></div>
-    <label class="upload2">＋ Subir logo o imagen<input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="tip">PNG con fondo transparente se ve mejor. Máximo 8 MB.</p></label><p class="tip" style="margin-top:-6px">¿No tienes diseño? <a href="disenos.html"><u>Elige uno de nuestros diseños listos</u></a>.</p>
+    <label class="upload2">＋ Subir logo o imagen<input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="tip">Si tu imagen tiene fondo de un solo color, lo quitamos solos. Máximo 8 MB.</p></label><p class="tip" style="margin-top:-6px">¿No tienes diseño? <a href="disenos.html"><u>Elige uno de nuestros diseños listos</u></a>.</p>
 
     <div class="step"><span>05</span><b>Cantidades por talla</b></div>
     <label>¿Para quién?<select id="audience"><option>Hombre</option><option>Mujer</option><option>Niño</option><option>Niña</option></select></label>
