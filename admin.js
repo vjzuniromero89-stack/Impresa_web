@@ -67,11 +67,20 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
       else{const n=document.createElement('span');n.className='msg err';n.textContent='Falta el archivo de impresión';fila2.append(n)}
       const fb=document.createElement('label');fb.className='fileBtn';fb.textContent=row.archivo?'Reemplazar archivo de impresión':'Subir archivo de impresión';const fi=document.createElement('input');fi.type='file';fi.accept='image/png,image/jpeg,image/webp,image/svg+xml,application/pdf';
       fi.onchange=()=>{nuevaImpresion=fi.files[0];if(nuevaImpresion)fb.firstChild.textContent=`Se subirá: ${nuevaImpresion.name} (${(nuevaImpresion.size/1e6).toFixed(1)} MB)`};fb.appendChild(fi);lb.append(t,fila2,fb)}
-    // interruptor «En la tienda»: verde = está en la tienda; se guarda al tocarlo
+    // Publicar en la tienda también requiere que el diseño sea visible.
     else if(tipo==='switch'){lb.className='ancho swRow';const b=document.createElement('button');b.type='button';b.className='swTienda';b.name=k;const m=document.createElement('span');m.className='msg';
-      const poner=v=>{b.setAttribute('aria-pressed',v);b.innerHTML=v?'<i></i> En la tienda':'<i></i> Agregar a la tienda';m.textContent=v&&row.activo===false?'(está oculto: marca «Visible en la web» para que salga)':''};poner(row[k]!==false);
-      b.onclick=async()=>{const v=b.getAttribute('aria-pressed')!=='true';poner(v);if(!row.id)return;b.disabled=true;const {error}=await sb.from(t).update({[k]:v}).eq('id',row.id);b.disabled=false;
-        if(error){poner(!v);m.className='msg err';m.textContent=error.message}else{row[k]=v;m.className='msg ok';m.textContent=v?'Ahora está en la tienda ✓':'Quitado de la tienda ✓'}};lb.append(b,m)}
+      const poner=v=>{b.setAttribute('aria-pressed',String(v));b.innerHTML=v?'<i></i> En la tienda':'<i></i> Agregar a la tienda'};
+      poner(row[k]===true&&row.activo!==false);
+      b.onclick=async()=>{const anterior=b.getAttribute('aria-pressed')==='true',v=!anterior,vis=campos.querySelector('[name=activo]'),antesVisible=vis?.checked;
+        if(!row.id){poner(v);if(v&&vis)vis.checked=true;return}
+        b.disabled=true;m.className='msg';m.textContent='Guardando…';
+        try{const cambios=v?{[k]:true,activo:true}:{[k]:false};
+          const {data,error}=await sb.from(t).update(cambios).eq('id',row.id).select('id,en_tienda,activo').single();
+          if(error)throw error;if(!data||data.en_tienda!==v||(v&&!data.activo))throw new Error('No se pudo confirmar el cambio. Recarga e inténtalo de nuevo.');
+          Object.assign(row,cambios);poner(v);if(v&&vis)vis.checked=true;
+          if(v)el.classList.remove('inactiva');m.className='msg ok';m.textContent=v?'Ahora está en la tienda ✓':'Quitado de la tienda ✓';
+        }catch(error){poner(anterior);if(vis)vis.checked=antesVisible;m.className='msg err';m.textContent=error.message||'No se pudo guardar'}
+        finally{b.disabled=false}};lb.append(b,m)}
     else if(tipo==='check'){lb.className='chk';const c=document.createElement('input');c.type='checkbox';c.name=k;c.checked=!!row[k];lb.append(c,label)}
     else if(tipo==='video'){lb.className='ancho';lb.append(label);const c=document.createElement('input');c.name=k;c.type='url';c.placeholder='https://youtu.be/… (o sube un archivo abajo)';c.value=row[k]||'';lb.append(c);
       const fb=document.createElement('label');fb.className='fileBtn';fb.textContent='Subir archivo de video (MP4, máx. 50 MB)';const fi=document.createElement('input');fi.type='file';fi.accept='video/mp4,video/webm,video/quicktime';fi.onchange=()=>{nuevoVideo=fi.files[0];if(nuevoVideo){c.value='';c.placeholder=`Se subirá: ${nuevoVideo.name}`}};fb.appendChild(fi);lb.append(fb)}
