@@ -7,8 +7,8 @@ window.IMPRESA = {
   supabaseKey: 'sb_publishable_PdTx9tjzJMzKoTm8tdZpGQ_g1_LpF4x',
   // Precios del diseñador (C$ por camisa). shortcut: valores de muestra; confirmar con IMPRESA
   precios: {
-    'Camiseta cuello redondo': { 'DTF': 350, 'Sublimación': 360 },
-    'Camisa Waffit (polo)': { 'DTF': 550, 'Sublimación': 570 },
+    'Camiseta cuello redondo': { 'DTF': 350, 'Bordado': 420 },
+    'Camisa Waffit (polo)': { 'Bordado': 600 },
     segundoLado: 150, // se suma si lleva diseño adelante y atrás
     // de mayor a menor: a partir de N camisas se multiplica por factor
     descuentos: [{ desde: 24, factor: 0.82 }, { desde: 12, factor: 0.9 }]

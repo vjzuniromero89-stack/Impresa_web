@@ -58,8 +58,8 @@ Local: `python -m http.server` (preview `impresa-web`, puerto 4393) contra el Su
 - Fuera por ahora: ver pedidos dentro del panel (se ven en Supabase → Table Editor), galería editable, varios administradores con roles.
 
 ## Diseñador y catálogo (2026-11-07)
-- Solo **DTF y Sublimación**. Sublimación muestra solo colores claros (poliéster blanco o claro).
-- Camisas **Klasiko** reales: `camiseta` (cuello redondo, 17 colores) y `waffit` (polo U-Waffit, 13 colores con código W…). Fotos generadas en blanco (Higgsfield, gpt_image_2_6) sin fondo en `assets/camisa/` y `assets/waffit/`; el ribete gris de la Waffit va en una capa aparte (`*-ribete.png`) para no teñirse.
+- Solo **DTF y Bordado** (cliente, 2026-11-07). Camiseta de algodón: DTF o bordado. Waffit: solo bordado (IMPRESA no hace DTF en Waffit). Técnicas por prenda en `camisas.js` → `tecnicas`.
+- Camisas **Klasiko** reales: `camiseta` (cuello redondo, algodón, 17 colores) y `waffit` (polo U-Waffit, 13 colores con código W…). Fotos generadas en blanco (Higgsfield, gpt_image_2_6) sin fondo en `assets/camisa/` y `assets/waffit/`; el ribete gris de la Waffit va en una capa aparte (`*-ribete.png`) para no teñirse.
 - `camisas.js` es la única fuente de prendas, colores, zonas de impresión y la etiqueta Klasiko (dibujada en canvas). La usan `disena.js` y `catalogo.html`.
 - Teñido: luz de cada píxel × color + brillo en colores oscuros, en canvas 800×800.
 - Precios en `config.js` → `precios` por prenda y técnica (valores de muestra hasta que IMPRESA confirme).
@@ -71,3 +71,6 @@ Local: `python -m http.server` (preview `impresa-web`, puerto 4393) contra el Su
 3. `puntos.html` + selección de punto en Mi pedido.
 4. `admin.html`: login, productos, videos, puntos con clic en el mapa.
 5. Pruebas en PC y móvil; publicación.
+
+## Galería de ejemplos
+Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfield sobre verde y recortados (ssets/disenos-anime/); fotos de ejemplo en ssets/galeria/. «Pedir esta camisa» abre disena.html?prenda&color&lado&diseno; diseno solo acepta ssets/disenos-anime/*.png. No se hacen personajes de franquicias con derechos (p. ej. Dragon Ball).

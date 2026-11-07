@@ -21,7 +21,7 @@
 .card .cod{font-family:'Barlow Condensed',Impact,sans-serif;font-style:italic;font-weight:900;font-size:24px;color:#1f78ff;line-height:1}
 .card .uso{font-size:11px;color:#5a7088;text-transform:uppercase;letter-spacing:.04em}
 .card a{margin-top:auto;background:#1f78ff;color:#fff;border-radius:999px;padding:9px 10px;font-weight:800;font-size:13px}
-.card a:hover{background:#2a8cff}
+.card a:hover{background:#2a8cff}.card a.lisa{background:#fff;color:#1f78ff;border:2px solid #1f78ff}
 @media(max-width:520px){.grid{grid-template-columns:1fr 1fr;gap:10px}.card .cod{font-size:20px}}
 </style>
 </head>
@@ -29,8 +29,8 @@
 <header><a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a><button id="menu" aria-label="Abrir menú">☰</button><nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="catalogo.html">Catálogo</a><a href="tienda.html">Tienda</a><a href="galeria.html">Galería</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="puntos.html">Puntos de entrega</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav></header>
 <main>
 <section class="pageHero"><p class="eyebrow">CAMISAS KLASIKO</p><h1>Catálogo de colores</h1><p>Elige el estilo y el color. Con un clic lo llevas al diseñador para poner tu logo.</p></section>
-<section class="cat" aria-labelledby="t-camiseta"><div class="catHead"><h2 id="t-camiseta"><small>Klasiko</small>Camisetas cuello redondo</h2><p>Algodón, unisex. Para DTF en cualquier color; para sublimación, solo los colores claros (☀).</p></div><div class="grid" data-prenda="camiseta"></div></section>
-<section class="cat" aria-labelledby="t-waffit"><div class="catHead"><h2 id="t-waffit"><small>Klasiko U-Waffit</small>Camisas polo Waffit</h2><p>Tela waffle con ribete gris en cuello y mangas. Hombre y mujer.</p></div><div class="grid" data-prenda="waffit"></div></section>
+<section class="cat" aria-labelledby="t-camiseta"><div class="catHead"><h2 id="t-camiseta"><small>Klasiko</small>Camisetas cuello redondo</h2><p>Algodón, unisex. Se personaliza con DTF o bordado en todos los colores.</p></div><div class="grid" data-prenda="camiseta"></div></section>
+<section class="cat" aria-labelledby="t-waffit"><div class="catHead"><h2 id="t-waffit"><small>Klasiko U-Waffit</small>Camisas polo Waffit</h2><p>Tipo polo con ribete gris en cuello y mangas. Se personaliza con bordado en todos los colores.</p></div><div class="grid" data-prenda="waffit"></div></section>
 </main>
 <footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer>
 <script src="config.js"></script><script src="app.js"></script><script src="camisas.js"></script>
@@ -44,8 +44,8 @@ for(const grid of $$('.grid[data-prenda]')){const id=grid.dataset.prenda,p=PREND
     card.append(cv);
     if(c.codigo){const k=document.createElement('span');k.className='cod';k.textContent=c.codigo;card.append(k)}
     const n=document.createElement('b');n.textContent=c.nombre;card.append(n);
-    const s=document.createElement('span');s.className='uso';s.textContent=c.claro?'DTF · ☀ Sublimación':'DTF';card.append(s);
-    const a=document.createElement('a');a.href=`disena.html?prenda=${id}&color=${encodeURIComponent(c.codigo||c.nombre)}`;a.textContent='Diseñar con este color';card.append(a);
+    const s=document.createElement('span');s.className='uso';const diseñable=true;s.textContent=p.tecnicas.join(' · ');card.append(s);
+    const a=document.createElement('a');if(diseñable){a.href=`disena.html?prenda=${id}&color=${encodeURIComponent(c.codigo||c.nombre)}`;a.textContent='Diseñar con este color'}else{a.href='contacto.html';a.textContent='Consultar';a.className='lisa'}card.append(a);
     grid.append(card);await new Promise(r=>setTimeout(r)); // deja respirar al navegador entre camisas
   }}
 })();

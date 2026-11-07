@@ -43,17 +43,22 @@ dImg.addEventListener('pointermove',e=>{if(!drag)return;const d=st.lados[st.lado
 
 /* ---------- Opciones ---------- */
 $$('.ladoBtn').forEach(b=>b.addEventListener('click',()=>{st.lado=b.dataset.lado;$$('.ladoBtn').forEach(x=>x.classList.toggle('active',x===b));pintar();mostrarDiseno()}));
-function renderColores(){const box=$('#colores');box.innerHTML='';const lista=P().colores.filter(c=>st.tec==='DTF'||c.claro);
+function renderColores(){const box=$('#colores');box.innerHTML='';const lista=P().colores; // DTF y bordado van en cualquier color
   if(!lista.includes(st.color))st.color=lista.find(c=>c.nombre===st.color?.nombre)||lista[0];
   lista.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='sw'+(c===st.color?' on':'');b.style.background=c.hex;const n=c.codigo?`${c.nombre} (${c.codigo})`:c.nombre;b.title=n;b.setAttribute('aria-label',n);b.setAttribute('aria-pressed',c===st.color);
     b.onclick=()=>{st.color=c;renderColores()};box.appendChild(b)});
   $('#colorNombre').textContent=st.color.codigo?`${st.color.nombre} · ${st.color.codigo}`:st.color.nombre;pintar()}
-$$('input[name=tec]').forEach(r=>r.addEventListener('change',()=>{st.tec=r.value;$('#tecNota').hidden=st.tec!=='Sublimación';renderColores();calc()}));
+$$('input[name=tec]').forEach(r=>r.addEventListener('change',()=>{st.tec=r.value;notaTec();renderColores();calc()}));
+// Cada camisa admite sus técnicas: camiseta = DTF o bordado, Waffit = solo bordado
+function syncTec(){const ts=P().tecnicas;if(!ts.includes(st.tec))st.tec=ts[0];
+  $$('input[name=tec]').forEach(r=>{const ok=ts.includes(r.value);r.disabled=!ok;r.checked=r.value===st.tec;r.closest('.tec').classList.toggle('off',!ok)});notaTec()}
+function notaTec(){stage.classList.toggle('bordado',st.tec==='Bordado');
+  $('#tecNota').textContent=st.tec==='Bordado'?`Bordado${st.prenda==='waffit'?' (la Waffit solo se borda)':''}: funciona mejor con logos de pocos colores y sin degradados. IMPRESA revisa tu logo antes de bordar.`:'DTF: impresión a todo color, perfecta para diseños grandes, fotos y degradados.'}
 $$('input[name=prenda]').forEach(r=>{r.checked=r.value===st.prenda;r.addEventListener('change',async()=>{st.prenda=r.value;await cargarPrenda(st.prenda);
   $('.ladoBtn[data-lado=frente]').textContent=st.prenda==='waffit'?'Frente (pecho)':'Frente';
   for(const l of ['frente','espalda'])if(st.lados[l])limitar(st.lados[l],l); // el diseño se ajusta a la nueva zona
   $$('#audience option').forEach(o=>o.disabled=!P().tallasNino&&/Niñ/.test(o.value));if($('#audience option:checked').disabled)$('#audience').value='Hombre';
-  renderTallas();renderColores();mostrarDiseno();calc()})});
+  syncTec();renderTallas();renderColores();mostrarDiseno();calc()})});
 function renderTallas(){const prev=Object.fromEntries($$('.qty').map(q=>[q.dataset.talla,q.value]));const t=TALLAS[/Niñ/.test($('#audience').value)?'nino':'adulto'];
   $('#sizes').innerHTML=t.map(x=>`<label>${x}<input class="qty" type="number" min="0" max="999" inputmode="numeric" value="${prev[x]??(x==='M'||x==='8'?1:0)}" data-talla="${x}"></label>`).join('');
   $$('.qty').forEach(q=>q.addEventListener('input',()=>{calc();pintar()}));calc();pintar()} // la etiqueta muestra la primera talla elegida

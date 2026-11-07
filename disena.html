@@ -19,6 +19,7 @@
 #zona.vacia::after{content:"Zona de impresión";position:absolute;inset:auto 0 50%;text-align:center;color:#1b6fa8;font-size:12px;font-weight:700;opacity:.8}
 #designImg{position:absolute;cursor:grab;filter:drop-shadow(0 1px 1px #0002);max-width:none}
 #designImg:active{cursor:grabbing}
+#stage.bordado #designImg{filter:saturate(1.15) contrast(1.08) drop-shadow(0 1px 0 #0006) drop-shadow(0 -1px 0 #ffffff30)}
 .hint{color:#9fc0da;font-size:12px;margin:10px 0 0;text-align:center}
 #sizeBox{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
 #sizeBox input{flex:1;min-width:140px;margin:0;padding:0;accent-color:#1b9ce9}
@@ -29,6 +30,7 @@
 .tec input{position:absolute;opacity:0}
 .tec b{display:block;font-size:16px;margin-bottom:4px}
 .tec span{font-size:12px;color:#a9c5db;line-height:1.4}
+.tec.off{opacity:.4;cursor:not-allowed}
 .tec:has(input:checked){border-color:#29a8ff;background:#0f3558;box-shadow:0 0 0 3px #29a8ff33}
 .tec:has(input:focus-visible){outline:2px solid #fff}
 #tecNota{margin:0;color:#ffce72;font-size:12px}
@@ -61,17 +63,17 @@
   <form id="config" class="dzForm">
     <div class="step"><span>01</span><b>Estilo de camisa Klasiko</b></div>
     <div class="tecs">
-      <label class="tec"><input type="radio" name="prenda" value="camiseta" checked><b>Camiseta</b><span>Cuello redondo, algodón. 17 colores.</span></label>
-      <label class="tec"><input type="radio" name="prenda" value="waffit"><b>Camisa Waffit</b><span>Tipo polo, tela waffle con ribete gris. 13 colores.</span></label>
+      <label class="tec"><input type="radio" name="prenda" value="camiseta" checked><b>Camiseta</b><span>Cuello redondo, algodón. DTF o bordado, 17 colores.</span></label>
+      <label class="tec"><input type="radio" name="prenda" value="waffit"><b>Camisa Waffit</b><span>Tipo polo con ribete gris. Bordado, 13 colores.</span></label>
     </div>
     <p class="tip" style="margin:-6px 0 0"><a href="catalogo.html"><u>Ver el catálogo con todos los colores</u></a></p>
 
     <div class="step"><span>02</span><b>Técnica</b></div>
     <div class="tecs">
-      <label class="tec"><input type="radio" name="tec" value="DTF" checked><b>DTF</b><span>En camisas de cualquier color. Colores vivos y detalles finos.</span></label>
-      <label class="tec"><input type="radio" name="tec" value="Sublimación"><b>Sublimación</b><span>La tinta queda dentro de la tela. No se siente al tacto.</span></label>
+      <label class="tec"><input type="radio" name="tec" value="DTF" checked><b>DTF</b><span>Impresión a todo color, ideal para diseños grandes y detallados. Solo en camiseta.</span></label>
+      <label class="tec"><input type="radio" name="tec" value="Bordado"><b>Bordado</b><span>Hilo cosido en la tela, el más duradero. Ideal para logos.</span></label>
     </div>
-    <p id="tecNota" hidden>La sublimación solo funciona en camisas de poliéster blancas o de colores claros, por eso solo ves esos colores.</p>
+    <p id="tecNota" style="color:#9fc0da"></p>
 
     <div class="step"><span>03</span><b>Color de la camisa: <span id="colorNombre"></span></b></div>
     <div id="colores" role="group" aria-label="Colores de camisa"></div>

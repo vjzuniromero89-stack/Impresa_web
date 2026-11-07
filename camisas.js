@@ -8,7 +8,9 @@ const PRENDAS={
     zonas:{frente:{x:33.75,y:17,w:32.5,h:42},espalda:{x:33.75,y:10,w:32.5,h:46}},
     etiqueta:{x:400,y:51,modelo:null},
     tallasNino:true,
-    // colores de la foto del cliente (2026-11-07); claro = sirve para sublimación
+    tecnicas:['DTF','Bordado'],
+    material:'algodón',
+    // colores de la foto del cliente (2026-11-07); claro = color claro (dato de referencia)
     colores:[['Blanco','#ffffff',1],['Negro','#151515'],['Gris jaspe','#b7b7b9',1],['Gris oscuro','#55575b'],['Azul marino','#1d2340'],['Azul royal','#1f48c4'],['Azul cielo','#7fb4ec',1],['Celeste','#aed0f0',1],['Rojo','#d01c22'],['Vino','#6a1b2b'],['Naranja','#f2541b'],['Amarillo','#f5d931',1],['Rosado','#f3c0d6',1],['Beige','#e3d3bd',1],['Café','#4a3326'],['Verde','#18a23a'],['Verde botella','#1e3b2b']]
   },
   waffit:{
@@ -19,6 +21,8 @@ const PRENDAS={
     zonas:{frente:{x:54.6,y:17.5,w:15.2,h:15.2},espalda:{x:33.75,y:11,w:32.5,h:44}},
     etiqueta:{x:400,y:41,modelo:'MEN U-WAFFIT'},
     tallasNino:false,
+    tecnicas:['Bordado'], // IMPRESA no hace DTF en Waffit (cliente, 2026-11-07)
+    material:'poliéster',
     // catálogo U-Waffit (códigos visibles en la imagen del cliente, 2026-11-07)
     colores:[['Amarillo','#f5c518',1,'W224'],['Vino','#7a1f2b',0,'W203'],['Naranja','#f26a1b',0,'W207'],['Verde','#1f9a45',0,'W211'],['Turquesa','#3fb0e0',0,'W212'],['Gris oscuro','#5a5d63',0,'W217'],['Azul royal','#1e4fc9',0,'W223'],['Beige','#e2cfa8',1,'W230'],['Gris','#8d9096',0,'W233'],['Blanco','#ffffff',1,'W236'],['Negro','#151515',0,'W237'],['Azul marino','#1d2340',0,'W238'],['Rosado','#f3b8cc',1,'W242']]
   }
