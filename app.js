@@ -17,10 +17,14 @@ $$('.cart').forEach(b=>b.addEventListener('click',()=>{if(addItem({nombre:b.data
 
 /* ---------- Diseña tu camisa ---------- */
 const techs=['Bordado','DTF','Serigrafía','Sublimación','Vinil']; let complex=false, designFile=null;
-function renderTech(){if(!$('#techs'))return; const material=$('#garment').value,box=$('#techs');box.innerHTML='';let notes=[];techs.forEach((t,i)=>{let ok=true,msg='';if(complex&&t==='Vinil'){ok=false;msg='demasiado detalle/degradados para corte de vinil'}if(complex&&t==='Bordado'){ok=false;msg='requiere revisión por complejidad'}if(t==='Sublimación'&&material!=='Camiseta'){ok=false;msg='confirmar composición/material antes de sublimar'}const d=document.createElement('label');d.className='tech'+(ok?'':' disabled');d.innerHTML=`<span>${t}</span><input type="radio" name="tech" value="${t}" ${ok?'':'disabled'} ${i===1?'checked':''}>`;box.appendChild(d);if(!ok)notes.push(`${t}: ${msg}.`)});$('#reason').textContent=notes.join(' ');calc()}
+function renderTech(){if(!$('#techs'))return; const material=$('#garment').value,box=$('#techs'),prev=$('input[name=tech]:checked')?.value;box.innerHTML='';let notes=[];
+  // conserva la técnica elegida si sigue permitida; si no, DTF (nunca se bloquea)
+  const allowed=t=>!(complex&&(t==='Vinil'||t==='Bordado'))&&!(t==='Sublimación'&&material!=='Camiseta'),pick=prev&&allowed(prev)?prev:'DTF';
+  techs.forEach((t,i)=>{let ok=true,msg='';if(complex&&t==='Vinil'){ok=false;msg='demasiado detalle/degradados para corte de vinil'}if(complex&&t==='Bordado'){ok=false;msg='requiere revisión por complejidad'}if(t==='Sublimación'&&material!=='Camiseta'){ok=false;msg='confirmar composición/material antes de sublimar'}const d=document.createElement('label');d.className='tech'+(ok?'':' disabled');d.innerHTML=`<span>${t}</span><input type="radio" name="tech" value="${t}" ${ok?'':'disabled'} ${t===pick?'checked':''}>`;box.appendChild(d);if(!ok)notes.push(`${t}: ${msg}.`)});$('#reason').textContent=notes.join(' ');calc()}
 function totalQty(){return $$('.qty').reduce((a,x)=>a+(+x.value||0),0)}
 function estimate(){const q=totalQty(),tech=$('input[name=tech]:checked')?.value||'DTF',base={Bordado:420,DTF:350,Serigrafía:320,Sublimación:360,Vinil:330}[tech],disc=q>=24?.82:q>=12?.9:1;return base*q*disc}
 function calc(){if(!$('#price'))return;$('#totalQty').textContent=totalQty();$('#price').textContent=money(estimate())}
+$('#config')?.addEventListener('submit',e=>e.preventDefault()); // Enter en un campo no debe recargar y perder el diseño
 $$('.qty').forEach(x=>x.addEventListener('input',calc));$('#garment')?.addEventListener('change',renderTech);$('#techs')?.addEventListener('change',calc);
 $('#audience')?.addEventListener('change',e=>{const map={Hombre:'Corte hombre',Mujer:'Corte mujer',Niño:'Corte infantil niño',Niña:'Corte infantil niña'};$('#viewNote').textContent=map[e.target.value]+' • arrastra la prenda para verla desde distintos ángulos.'});
 $('#color')?.addEventListener('input',e=>{const c=e.target.value;$('#model').style.background=`linear-gradient(90deg,color-mix(in srgb, ${c} 72%, #555),${c} 20%,color-mix(in srgb, ${c} 96%, white) 50%,${c} 80%,color-mix(in srgb, ${c} 72%, #555))`});
@@ -30,7 +34,8 @@ let rotY=0,rotX=0,drag=false,lastX=0,lastY=0;function applyRotation(){if($('#mod
 $('#add')?.addEventListener('click',()=>{const q=totalQty();if(q<1){alert('Indica al menos una prenda en la distribución de tallas.');return}
   const tallas=$$('.qty').map(x=>+x.value?`${x.closest('label').firstChild.textContent.trim()}: ${x.value}`:'').filter(Boolean).join(', ');
   const tech=$('input[name=tech]:checked')?.value||'DTF';
-  const ok=addItem({nombre:`${$('#garment').value} personalizada`,detalle:`${$('#audience').value} • color ${$('#color').value} • ${tech} • tallas ${tallas}${designFile?` • diseño: ${designFile.nombre}`:' • sin diseño subido'}`,qty:q,precio:estimate()/q,diseno:designFile});
+  const g=$('#garment').value;
+  const ok=addItem({nombre:`${g} ${g==='Polo'?'personalizado':'personalizada'}`,detalle:`${$('#audience').value} • color ${$('#color').value} • ${tech} • tallas ${tallas}${designFile?` • diseño: ${designFile.nombre}`:' • sin diseño subido'}`,qty:q,precio:estimate()/q,diseno:designFile});
   if(ok)location.href='pedido.html'});
 
 /* ---------- Videos del proceso ---------- */

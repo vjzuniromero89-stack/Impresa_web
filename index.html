@@ -1,6 +1,149 @@
-<!doctype html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#031426"><title>IMPRESA | Print & Textile Solutions</title><style>
-*{box-sizing:border-box}html,body{margin:0;background:#061426;font-family:Arial,sans-serif}.approved-home{position:relative;width:100%;max-width:1536px;margin:auto;background:#fff}.approved-home>img{display:block;width:100%;height:auto}.hot{position:absolute;display:block;z-index:5;border-radius:16px}.hot:hover{outline:3px solid rgba(0,157,255,.45)}
-/* Click areas mapped to the approved master design */
-.h-services{left:35%;top:.8%;width:7%;height:3%}.h-design{left:42.5%;top:.8%;width:11%;height:3%}.h-store{left:53.5%;top:.8%;width:6%;height:3%}.h-gallery{left:59.5%;top:.8%;width:7%;height:3%}.h-about{left:66.5%;top:.8%;width:8%;height:3%}.h-contact{left:74.5%;top:.8%;width:7%;height:3%}.h-design-main{left:3%;top:21.5%;width:18%;height:4%}.h-store-main{left:22%;top:21.5%;width:14%;height:4%}.h-store-card{left:3%;top:59.3%;width:44%;height:15%}.h-design-card{left:48%;top:59.3%;width:49%;height:15%}.h-cart{left:79.5%;top:.9%;width:3.5%;height:2.6%}.h-quote{left:84.8%;top:.9%;width:13%;height:2.6%}
-@media(max-width:700px){body{background:#fff}.approved-home{width:100%;overflow:hidden}.approved-home>img{width:100%;min-height:auto}.hot{border-radius:8px}}
-</style></head><body><main class="approved-home"><img src="assets/home-approved-exact.png" alt="IMPRESA - página principal aprobada"><a class="hot h-services" href="servicios.html" aria-label="Servicios"></a><a class="hot h-design" href="disena.html" aria-label="Diseña tu camisa"></a><a class="hot h-store" href="tienda.html" aria-label="Tienda"></a><a class="hot h-gallery" href="galeria.html" aria-label="Galería"></a><a class="hot h-about" href="nosotros.html" aria-label="Nosotros"></a><a class="hot h-contact" href="contacto.html" aria-label="Contacto"></a><a class="hot h-design-main" href="disena.html" aria-label="Diseña tu camisa"></a><a class="hot h-store-main" href="tienda.html" aria-label="Ver tienda"></a><a class="hot h-store-card" href="tienda.html" aria-label="Productos listos para comprar"></a><a class="hot h-design-card" href="disena.html" aria-label="Comenzar a diseñar"></a><a class="hot h-cart" href="pedido.html" aria-label="Mi pedido"></a><a class="hot h-quote" href="contacto.html" aria-label="Solicitar cotización"></a></main></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#061426">
+<title>IMPRESA | Print & Textile Solutions</title>
+<meta name="description" content="Bordados, DTF, serigrafía, sublimación, vinil, rotulaciones y diseño gráfico en Nicaragua. Diseña tu camisa o compra productos listos.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@1,800;1,900&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+:root{--azul:#1f78ff;--azul2:#2a8cff;--navy:#061426;--card:#081a2e;--claro:#eef2f7}
+body{font-family:Inter,Arial,sans-serif}
+.disp{font-family:'Barlow Condensed',Impact,sans-serif;font-style:italic;font-weight:900;text-transform:uppercase;letter-spacing:0;line-height:.92}
+.btnA{display:inline-flex;align-items:center;gap:10px;background:var(--azul);color:#fff;font-weight:800;padding:14px 24px;border-radius:999px;border:2px solid var(--azul);box-shadow:0 10px 26px #1f78ff40;transition:transform .15s,background .15s}
+.btnA:hover{transform:translateY(-2px);background:var(--azul2)}
+.btnA.line{background:transparent;border-color:#fff;box-shadow:none}
+.btnA.white{background:#fff;color:var(--azul);border-color:#fff}
+.btnA svg{width:18px;height:18px}
+.quote{margin-left:8px;padding:11px 18px;font-size:13px}
+/* Portada */
+.hero2{position:relative;display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:center;gap:20px;padding:0 0 0 5%;background:linear-gradient(90deg,#04101f 0,#061a33 45%,#0a2445 100%);overflow:hidden;min-height:540px}
+.hero2 .txt{position:relative;z-index:2;padding:40px 0}
+.hero2 .kicker{font-size:clamp(20px,2.2vw,28px);color:var(--azul2);margin:0}
+.hero2 h1{font-size:clamp(46px,6.2vw,92px);margin:10px 0 22px;letter-spacing:0}
+.hero2 h1 .b{color:var(--azul2)}
+.hero2 p{color:#d6e4f3;font-size:clamp(15px,1.3vw,18px);line-height:1.5;max-width:520px}
+.hero2 .acts{display:flex;gap:14px;flex-wrap:wrap;margin-top:26px}
+.hero2 .pic{align-self:stretch;margin:0;position:relative}
+.hero2 .pic img{width:100%;height:100%;object-fit:cover;object-position:left center;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 14%);mask-image:linear-gradient(90deg,transparent 0,#000 14%)}
+/* Servicios */
+.svcWrap{background:var(--claro);padding:34px 3%}
+.svcGrid{max-width:1240px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.svcCard{background:var(--card);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 28px #06142626;color:#fff}
+.svcCard img{width:100%;aspect-ratio:2.1/1;object-fit:cover}
+.svcCard .body{display:grid;grid-template-columns:44px 1fr;gap:4px 14px;padding:16px 16px 18px;flex:1}
+.ico2{grid-row:1/3;width:44px;height:44px;border-radius:10px;border:2px solid var(--azul);display:grid;place-items:center;color:var(--azul2)}
+.ico2 svg{width:24px;height:24px}
+.svcCard h3{margin:2px 0 0;font-size:16px;font-weight:800;text-transform:uppercase}
+.svcCard p{margin:0;color:#b9cbe0;font-size:13px;line-height:1.45}
+.svcCard .more{grid-column:2;justify-self:start;margin-top:12px;padding:8px 18px;font-size:12px}
+.ideaCard{background:#fff;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:10px 12px 16px;color:var(--azul);box-shadow:0 12px 28px #06142618}
+.ideaCard img{width:100%;max-width:300px}
+.ideaCard .perks{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%;text-align:center;font-weight:800;font-size:12px;text-transform:uppercase}
+.ideaCard .perks svg{width:34px;height:34px;display:block;margin:0 auto 6px;color:var(--navy)}
+/* Banners */
+.banners{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--claro);padding:0}
+.ban{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;overflow:hidden;min-height:300px;color:#fff;padding-left:clamp(20px,3vw,40px)}
+.ban.prod{background:linear-gradient(120deg,#0d5cf0,#1f78ff 55%,#3b8dff)}
+.ban.dis{background:linear-gradient(120deg,#04101f,#0a2342)}
+.ban h2{font-size:clamp(30px,3vw,46px);overflow-wrap:anywhere;margin:0 0 14px;letter-spacing:0}
+.ban.dis h2 .b{color:var(--azul2)}
+.ban p{color:#e3eefb;font-size:14px;line-height:1.5;margin:0 0 20px;max-width:330px}
+.ban img{width:100%;height:100%;object-fit:cover}
+/* Proceso */
+.proc{background:var(--claro);color:var(--navy);padding:40px 3% 46px}
+.proc .top{max-width:1240px;margin:0 auto 22px;display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}
+.proc h2{font-size:clamp(34px,3.4vw,46px);margin:0;color:#0a1b30}
+.proc .top p{margin:6px 0 0;color:#334a63}
+.proc .btnA.line{border-color:var(--azul);color:var(--azul);padding:10px 18px;font-size:13px}
+.vids{max-width:1240px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.vid{position:relative;padding:0;border:0;border-radius:12px;overflow:hidden;cursor:pointer;background:#000;text-align:left;color:#fff;font:inherit}
+.vid img{width:100%;aspect-ratio:2.03/1;object-fit:cover;transition:transform .3s}
+.vid:hover img{transform:scale(1.04)}
+.vid span{position:absolute;left:0;right:0;bottom:0;padding:26px 14px 12px;background:linear-gradient(transparent,#000c);font-weight:800;font-size:14px}
+/* Ventajas */
+.perksBar{background:var(--navy);display:grid;grid-template-columns:repeat(5,1fr);padding:28px 4%;gap:10px}
+.perksBar div{display:flex;align-items:center;gap:14px;justify-content:center;font-weight:800;font-size:13px;text-transform:uppercase;line-height:1.3}
+.perksBar div+div{border-left:1px solid #1d3a5a}
+.perksBar svg{width:46px;height:46px;color:var(--azul2);flex:none}
+@media(max-width:1100px){.quote{display:none}.svcGrid,.vids{grid-template-columns:repeat(2,1fr)}.banners{grid-template-columns:1fr}.perksBar{grid-template-columns:repeat(3,1fr);row-gap:22px}.perksBar div:nth-child(4){border-left:0}}
+@media(max-width:900px){.hero2{grid-template-columns:1fr;padding:34px 5% 0;min-height:0}.hero2 .txt{padding-bottom:0}.hero2 .pic{margin:0 -6%}.hero2 .pic img{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%);mask-image:linear-gradient(180deg,transparent 0,#000 18%);height:auto}}
+@media(max-width:600px){.svcGrid{gap:10px}.svcCard .body{grid-template-columns:1fr;padding:12px}.ico2{display:none}.svcCard h3{font-size:14px}.svcCard p{font-size:12px}.svcCard .more{grid-column:1;padding:7px 14px}.ban{grid-template-columns:1fr;padding:28px 20px 0}.ban img{height:240px;object-fit:contain}.vids{gap:10px}.vid span{font-size:12px;padding:20px 10px 8px}.perksBar{grid-template-columns:1fr 1fr}.perksBar div{justify-content:flex-start;border-left:0!important}.perksBar svg{width:36px;height:36px}.hero2 .acts .btnA{flex:1;justify-content:center;padding:13px 12px;font-size:14px;white-space:nowrap}}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a>
+  <button id="menu" aria-label="Abrir menú">☰</button>
+  <nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="tienda.html">Tienda</a><a href="galeria.html">Galería</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav>
+  <a class="btnA quote" href="contacto.html">Solicitar cotización</a>
+</header>
+
+<main>
+<section class="hero2" aria-labelledby="titulo">
+  <div class="txt">
+    <p class="kicker disp">Tu idea, nuestra impresión</p>
+    <h1 id="titulo" class="disp">Soluciones <span class="b">en impresión y textiles</span></h1>
+    <p>Bordados, DTF, serigrafía, sublimación, vinil, rotulaciones y diseño gráfico. Camisas personalizadas, uniformes, merchandise y mucho más en Nicaragua.</p>
+    <div class="acts">
+      <a class="btnA" href="disena.html">Diseña tu camisa <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btnA line" href="tienda.html">Ver tienda <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+    </div>
+  </div>
+  <figure class="pic"><img src="assets/portada/hero.webp" alt="Camisetas, polo, gorra y termo con el logo de IMPRESA" width="1278" height="716" fetchpriority="high"></figure>
+</section>
+
+<section class="svcWrap" aria-label="Servicios">
+  <div class="svcGrid">
+    <article class="svcCard"><img src="assets/portada/bordado.webp" alt="Máquina bordando el logo IMPRESA" loading="lazy"><div class="body"><span class="ico2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20 20 4M14 4h6v6"/><circle cx="7" cy="17" r="2"/></svg></span><h3>Bordados</h3><p>Personalización de alta calidad en gorras, camisas, uniformes y más.</p><a class="btnA more" href="servicios.html#bordado">Ver más →</a></div></article>
+    <article class="svcCard"><img src="assets/portada/dtf.webp" alt="Impresora DTF imprimiendo un león a color" loading="lazy"><div class="body"><span class="ico2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="8" width="16" height="9" rx="2"/><path d="M7 8V4h10v4M7 14h10v6H7z"/></svg></span><h3>DTF</h3><p>Impresión de alta definición en 30 cm y 60 cm.</p><a class="btnA more" href="servicios.html#dtf">Ver más →</a></div></article>
+    <article class="svcCard"><img src="assets/portada/serigrafia.webp" alt="Serigrafía con tinta azul" loading="lazy"><div class="body"><span class="ico2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M6 15h12M9 9h6"/></svg></span><h3>Serigrafía</h3><p>Ideal para grandes cantidades y diseños duraderos.</p><a class="btnA more" href="servicios.html#serigrafia">Ver más →</a></div></article>
+    <article class="svcCard"><img src="assets/portada/sublimacion.webp" alt="Sublimación de un león a todo color" loading="lazy"><div class="body"><span class="ico2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></svg></span><h3>Sublimación</h3><p>Colores vibrantes en telas y productos.</p><a class="btnA more" href="servicios.html#sublimacion">Ver más →</a></div></article>
+    <article class="svcCard"><img src="assets/portada/vinil.webp" alt="Vinil impreso con el logo IMPRESA" loading="lazy"><div class="body"><span class="ico2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg></span><h3>Viniles</h3><p>Personalización en vinil textil y adhesivo.</p><a class="btnA more" href="servicios.html#vinil">Ver más →</a></div></article>
+    <article class="svcCard"><img src="assets/portada/rotulacion.webp" alt="Impresión de un rótulo en gran formato" loading="lazy"><div class="body"><span class="ico2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="11" rx="1.5"/><path d="M8 15v5M16 15v5M7 9h10"/></svg></span><h3>Rotulaciones</h3><p>Impresión de vinil, banners, letreros y más para tu negocio.</p><a class="btnA more" href="servicios.html#rotulacion">Ver más →</a></div></article>
+    <article class="svcCard"><img src="assets/portada/diseno-grafico.webp" alt="Diseño del logo IMPRESA en computadora" loading="lazy"><div class="body"><span class="ico2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m14 4 6 6-9 9H5v-6z"/><path d="m12 6 6 6"/></svg></span><h3>Diseño gráfico</h3><p>Creamos tu diseño o adaptamos tu idea.</p><a class="btnA more" href="servicios.html#diseno">Ver más →</a></div></article>
+    <div class="ideaCard">
+      <img src="assets/portada/tu-idea.webp" alt="Tu idea, nosotros la hacemos realidad" loading="lazy">
+      <div class="perks"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>Envíos a todo Nicaragua</span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>Calidad garantizada</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="banners" aria-label="Tienda y diseño">
+  <div class="ban prod">
+    <div><h2 class="disp">Productos listos para comprar</h2><p>Camisas, gorras, uniformes y más. Precios fijos.</p><a class="btnA white" href="tienda.html">Ver tienda <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    <img src="assets/portada/productos.webp" alt="Camisetas y gorras listas para comprar" loading="lazy">
+  </div>
+  <div class="ban dis">
+    <div><h2 class="disp">Diseña tu <span class="b">camisa</span> personalizada</h2><p>Elige el tipo de camisa, sube tu diseño, selecciona la técnica y obtén tu precio al instante.</p><a class="btnA" href="disena.html">Comenzar a diseñar <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    <img src="assets/portada/disena.webp" alt="Camiseta blanca con diseño de león y selector de colores" loading="lazy">
+  </div>
+</section>
+
+<section class="proc" aria-labelledby="proceso">
+  <div class="top"><div><h2 id="proceso" class="disp">Nuestro proceso</h2><p>Mira cómo convertimos tus ideas en productos increíbles.</p></div><a class="btnA line" href="nosotros.html#proceso">Ver todos los videos →</a></div>
+  <div class="vids">
+    <button class="vid video" data-title="Proceso de bordado"><img src="assets/portada/video-bordado.webp" alt="" loading="lazy"><span>Proceso de bordado</span></button>
+    <button class="vid video" data-title="Impresión DTF"><img src="assets/portada/video-dtf.webp" alt="" loading="lazy"><span>Impresión DTF</span></button>
+    <button class="vid video" data-title="Serigrafía en acción"><img src="assets/portada/video-serigrafia.webp" alt="" loading="lazy"><span>Serigrafía en acción</span></button>
+    <button class="vid video" data-title="Rotulación e impresión"><img src="assets/portada/video-rotulacion.webp" alt="" loading="lazy"><span>Rotulación e impresión</span></button>
+  </div>
+</section>
+
+<section class="perksBar" aria-label="Por qué IMPRESA">
+  <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="13" width="4" height="6" rx="1.5"/><rect x="17.5" y="13" width="4" height="6" rx="1.5"/><path d="M19.5 19c0 1.5-2 2.5-5 2.5"/></svg>Atención personalizada</div>
+  <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg>Equipos de alta calidad</div>
+  <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2-1.5h2a4 4 0 0 0 4-4c0-4.5-4-8-9-8z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10" cy="7" r="1.2"/><circle cx="15" cy="7.5" r="1.2"/></svg>Diseños únicos</div>
+  <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3 3 6l2 5 2-1v11h10V10l2 1 2-5-5-3c0 2-1.5 3-4 3S8 5 8 3z"/></svg>Productos resistentes</div>
+  <div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.5"/></svg>Envíos a todo Nicaragua</div>
+</section>
+</main>
+
+<dialog id="videoModal"><button id="closeModal" aria-label="Cerrar">✕</button><div class="videoBox">▶</div><h3 id="videoTitle">Proceso IMPRESA</h3><p>Pronto verás aquí el video real de IMPRESA. Mientras tanto, escríbenos por WhatsApp y te mostramos trabajos recientes.</p></dialog>
+<footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer>
+<script src="config.js"></script><script src="app.js"></script>
+</body>
+</html>
