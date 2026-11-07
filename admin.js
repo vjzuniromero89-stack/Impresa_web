@@ -29,7 +29,7 @@ async function subir(file,carpeta){if(file.size>50*1024*1024)throw new Error('El
 /* ---------- Tablas editables ---------- */
 const TABLAS={
   productos:{orden:'orden',foto:'foto_url',carpeta:'productos',vacio:{nombre:'',detalle:'',precio:0,foto_url:'',orden:99,activo:true},
-    campos:[['nombre','Nombre','text',1],['detalle','Detalle (ej. Algodón • Unisex)','text'],['precio','Precio C$','number',1],['orden','Orden','number'],['activo','Visible en la web','check']]},
+    campos:[['nombre','Nombre','text',1],['detalle','Detalle (ej. Camiseta negra • DTF • diseño D007)','text'],['precio','Precio C$','number',1],['enlace','Enlace «Cambiar color» (opcional, empieza con disena.html?)','text'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,orden:99,activo:true},
     campos:[['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   videos:{orden:'orden',foto:'portada_url',carpeta:'videos',vacio:{titulo:'',portada_url:'',video_url:'',orden:99,activo:true},
@@ -81,7 +81,7 @@ function fila(t,row,i){const def=TABLAS[t],el=document.createElement('article');
   g.onclick=async()=>{const datos={};for(const [k,,tipo,req] of def.campos){if(tipo==='impresion')continue;const c=campos.querySelector(`[name=${k}]`);
       const v=tipo==='check'?c.checked:tipo==='number'?(c.value===''?null:+c.value):c.value.trim();
       if(req&&(v===''||v==null)){msg.className='msg err';msg.textContent=k==='lat'||k==='lng'?'Haz clic en el mapa para ubicar el punto.':'Completa los campos obligatorios.';c.focus?.();return}
-      datos[k]=tipo==='text'||tipo==='video'?(v||(k==='video_url'?null:'')):v}
+      datos[k]=tipo==='text'||tipo==='video'?(v||(k==='video_url'||k==='enlace'?null:'')):v}
     if(def.foto&&!nuevaFoto&&!row[def.foto]){msg.className='msg err';msg.textContent='Falta la foto.';return}
     g.disabled=true;msg.className='msg';msg.textContent='Guardando…';
     try{if(nuevaFoto)datos[def.foto]=await subir(nuevaFoto,def.carpeta);

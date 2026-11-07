@@ -52,9 +52,10 @@ $('#cerrarDis').addEventListener('click',()=>dlg.close());dlg.addEventListener('
 $('#verDisenos').addEventListener('click',async()=>{dlg.showModal();if(catalogo)return;const g=$('#gridDis');
   catalogo=await sbGet('disenos?select=codigo,nombre,preview_url&activo=eq.true&order=orden,created_at');
   if(!catalogo?.length){catalogo=null;g.innerHTML='<p>No se pudieron cargar los diseños. Cierra e inténtalo de nuevo.</p>';return}g.innerHTML='';
-  for(const r of catalogo){if(!permitido(r.preview_url))continue;const b=document.createElement('button');b.type='button';b.className='dItem';b.innerHTML='<img loading="lazy" alt=""><span></span>';
+  const ok=catalogo.filter(r=>permitido(r.preview_url)),lista=ok.map(r=>({src:r.preview_url,titulo:`${r.codigo} · ${r.nombre}`,oscuro:true,accion:{texto:'Usar en mi camisa',onclick:()=>{dlg.close();usarUrl(r.preview_url,r.codigo)}}}));
+  for(const r of ok){const b=document.createElement('button');b.type='button';b.className='dItem';b.innerHTML='<img loading="lazy" alt=""><span></span>';
     b.querySelector('img').src=r.preview_url;b.querySelector('img').alt=r.nombre;b.querySelector('span').textContent=`${r.codigo} · ${r.nombre}`;
-    b.onclick=()=>{dlg.close();usarUrl(r.preview_url,r.codigo)};g.append(b)}});
+    b.onclick=()=>verGrande(lista,ok.indexOf(r));g.append(b)}});
 function usarArchivo(f,codigo=null){
   if(!/^image\/(png|jpeg|webp|svg\+xml)$/.test(f.type)){alert('Sube una imagen PNG, JPG, WEBP o SVG.');return}
   if(f.size>8e6){alert('La imagen pesa más de 8 MB. Prueba con una más liviana.');return}

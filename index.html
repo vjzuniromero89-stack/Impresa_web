@@ -69,6 +69,20 @@ body{font-family:Inter,Arial,sans-serif}
 .perksBar div{display:flex;align-items:center;gap:14px;justify-content:center;font-weight:800;font-size:13px;text-transform:uppercase;line-height:1.3}
 .perksBar div+div{border-left:1px solid #1d3a5a}
 .perksBar svg{width:46px;height:46px;color:var(--azul2);flex:none}
+.tiendaHome{background:#081a2e;padding:44px 4% 40px}
+.tHead{max-width:1240px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:end;gap:14px;flex-wrap:wrap}
+.tHead h2{font-size:clamp(34px,4vw,52px);margin:4px 0 0;color:#fff}
+.carrusel{position:relative;max-width:1240px;margin:auto}
+.pista{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:4px 2px 12px;scrollbar-width:none}
+.pista::-webkit-scrollbar{display:none}
+.slide{flex:0 0 calc((100% - 48px)/4);scroll-snap-align:start;background:#0b2037;border:1px solid #1d4d77;border-radius:16px;padding:10px 10px 14px;display:flex;flex-direction:column;gap:4px}
+.slide .zoom,.realProducts .zoom{all:unset;cursor:zoom-in;display:block;border-radius:12px;overflow:hidden}
+.slide img{width:100%;aspect-ratio:1;object-fit:cover;background:#eef2f7;transition:transform .3s}.slide .zoom:hover img{transform:scale(1.04)}
+.slide b{font-size:15px;margin-top:6px}.slide span{font-size:12px;color:#9fc0da}.slide strong{color:#37aefe;font-size:18px}
+.cNav{position:absolute;top:38%;z-index:2;width:44px;height:44px;border-radius:50%;border:0;background:#1f78ff;color:#fff;font-size:28px;line-height:1;cursor:pointer;box-shadow:0 6px 18px #0008}
+.cPrev{left:-14px}.cSig{right:-14px}
+@media(max-width:900px){.slide{flex-basis:calc((100% - 16px)/2)}}
+@media(max-width:520px){.slide{flex-basis:78%}.cNav{display:none}}
 @media(max-width:1100px){.quote{display:none}.svcGrid,.vids{grid-template-columns:repeat(2,1fr)}.banners{grid-template-columns:1fr}.perksBar{grid-template-columns:repeat(3,1fr);row-gap:22px}.perksBar div:nth-child(4){border-left:0}}
 @media(max-width:900px){.hero2{grid-template-columns:1fr;padding:34px 5% 0;min-height:0}.hero2 .txt{padding-bottom:0}.hero2 .pic{margin:0 -6%}.hero2 .pic img{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 18%);mask-image:linear-gradient(180deg,transparent 0,#000 18%);height:auto}}
 @media(max-width:600px){.svcGrid{gap:10px}.svcCard .body{grid-template-columns:1fr;padding:12px}.ico2{display:none}.svcCard h3{font-size:14px}.svcCard p{font-size:12px}.svcCard .more{grid-column:1;padding:7px 14px}.ban{grid-template-columns:1fr;padding:28px 20px 0}.ban img{height:240px;object-fit:contain}.vids{gap:10px}.vid span{font-size:12px;padding:20px 10px 8px}.perksBar{grid-template-columns:1fr 1fr}.perksBar div{justify-content:flex-start;border-left:0!important}.perksBar svg{width:36px;height:36px}.hero2 .acts .btnA{flex:1;justify-content:center;padding:13px 12px;font-size:14px;white-space:nowrap}}
@@ -78,7 +92,7 @@ body{font-family:Inter,Arial,sans-serif}
 <header>
   <a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a>
   <button id="menu" aria-label="Abrir menú">☰</button>
-  <nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="disenos.html">Diseños</a><a href="catalogo.html">Catálogo</a><a href="tienda.html">Tienda</a><a href="galeria.html">Galería</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="puntos.html">Puntos de entrega</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav>
+  <nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="disenos.html">Diseños</a><a href="catalogo.html">Catálogo</a><a href="tienda.html">Tienda</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="puntos.html">Puntos de entrega</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav>
   <a class="btnA quote" href="contacto.html">Solicitar cotización</a>
 </header>
 
@@ -94,6 +108,10 @@ body{font-family:Inter,Arial,sans-serif}
     </div>
   </div>
   <figure class="pic"><img src="assets/portada/hero.webp" alt="Camisetas, polo, gorra y termo con el logo de IMPRESA" width="1278" height="716" fetchpriority="high"></figure>
+</section>
+
+<section class="tiendaHome" aria-labelledby="t-tienda"><div class="tHead"><div><p class="eyebrow">TIENDA IMPRESA</p><h2 id="t-tienda" class="disp">Listas para llevar</h2></div><a class="btnA" href="tienda.html">Ver toda la tienda →</a></div>
+  <div id="carrusel" class="carrusel" role="region" aria-roledescription="carrusel" aria-label="Productos de la tienda"><button type="button" class="cNav cPrev" aria-label="Anterior">‹</button><div class="pista" tabindex="0"></div><button type="button" class="cNav cSig" aria-label="Siguiente">›</button></div>
 </section>
 
 <section class="svcWrap" aria-label="Servicios">

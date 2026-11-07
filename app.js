@@ -5,6 +5,28 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 
 $('#menu')?.addEventListener('click',()=>$('#nav')?.classList.toggle('open')); $$('#nav a').forEach(a=>a.addEventListener('click',()=>$('#nav')?.classList.remove('open')));
 
+/* ---------- Vista en grande (diseños, galería) ----------
+   verGrande(lista, i): lista = [{src, titulo, sub, oscuro, accion:{texto, href | onclick}}] */
+let _vg=null;
+function verGrande(lista,i=0){
+  if(!_vg){_vg=document.createElement('dialog');_vg.className='vg';_vg.setAttribute('aria-label','Vista en grande');
+    _vg.innerHTML='<button type="button" class="vgX" aria-label="Cerrar">×</button><button type="button" class="vgN vgP" aria-label="Anterior">‹</button><figure><div class="vgImg"><img alt=""></div><figcaption><b></b><span></span></figcaption></figure><button type="button" class="vgN vgS" aria-label="Siguiente">›</button><div class="vgAcc"><button type="button" class="btn ghost vgFondo">◐ Cambiar fondo</button><a class="btn vgBtn"></a></div>';
+    document.body.appendChild(_vg);
+    _vg.querySelector('.vgX').onclick=()=>_vg.close();
+    _vg.addEventListener('click',e=>{if(e.target===_vg)_vg.close()});
+    _vg.querySelector('.vgFondo').onclick=()=>_vg.classList.toggle('claro');
+    _vg.querySelector('.vgP').onclick=()=>_vg._ir(-1);_vg.querySelector('.vgS').onclick=()=>_vg._ir(1);
+    _vg.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')_vg._ir(-1);if(e.key==='ArrowRight')_vg._ir(1)});
+    let x0=null;_vg.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
+    _vg.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)_vg._ir(dx<0?1:-1);x0=null})}
+  const pintar=()=>{const it=lista[i],img=_vg.querySelector('img'),a=_vg.querySelector('.vgBtn');img.src=it.src;img.alt=it.titulo||'';
+    _vg.querySelector('figcaption b').textContent=it.titulo||'';_vg.querySelector('figcaption span').textContent=it.sub||'';
+    _vg.classList.toggle('foto',!it.oscuro&&it.oscuro!==undefined);_vg.querySelector('.vgFondo').hidden=it.oscuro===false;
+    a.hidden=!it.accion;if(it.accion){a.textContent=it.accion.texto;if(it.accion.href){a.href=it.accion.href;a.onclick=null}else{a.removeAttribute('href');a.onclick=()=>{_vg.close();it.accion.onclick()}}}
+    $$('.vgN').forEach(b=>b.hidden=lista.length<2)};
+  _vg._ir=d=>{i=(i+d+lista.length)%lista.length;pintar()};
+  pintar();if(!_vg.open)_vg.showModal()}
+
 /* ---------- Supabase (REST, sin librería) ---------- */
 const sbReady=()=>CFG.supabaseUrl&&CFG.supabaseKey;
 // clave sb_publishable_ va solo en apikey; una clave anon antigua (JWT) también en Authorization
@@ -20,9 +42,27 @@ function addItem(item){const c=getCart();c.push(item);return setCart(c)}
 updateCount();
 
 /* ---------- Tienda (productos desde Supabase; si falla, quedan los del HTML) ---------- */
-document.addEventListener('click',e=>{const b=e.target.closest('.cart');if(!b)return;if(addItem({nombre:b.dataset.name,detalle:b.dataset.detail||'',qty:1,precio:+b.dataset.price}))$('#cartStatus').innerHTML=`Agregado a tu pedido. <a href="pedido.html"><u>Ver mi pedido</u></a>`});
-(async()=>{const box=$('.realProducts');if(!box)return;const rows=await sbGet('productos?select=nombre,detalle,precio,foto_url&activo=eq.true&order=orden,created_at');if(!rows?.length)return;
-  box.innerHTML=rows.map(p=>`<article><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"><h3>${esc(p.nombre)}</h3><p>${esc(p.detalle)}</p><strong>${money(p.precio)}</strong><button class="btn cart" data-name="${esc(p.nombre)}" data-detail="${esc(p.detalle)}" data-price="${+p.precio}">Agregar al carrito</button></article>`).join('')})();
+document.addEventListener('click',e=>{const b=e.target.closest('.cart');if(!b)return;const t=b.closest('article')?.querySelector('.tallaSel')?.value;
+  if(addItem({nombre:b.dataset.name,detalle:(b.dataset.detail||'')+(t?` • talla ${t}`:''),qty:1,precio:+b.dataset.price,vista:b.dataset.foto||undefined}))$('#cartStatus').innerHTML=`Agregado a tu pedido${t?` (talla ${esc(t)})`:''}. <a href="pedido.html"><u>Ver mi pedido</u></a>`});
+const TALLAS_TIENDA=['XS','S','M','L','XL','2XL','3XL'];
+const productos=sbGet('productos?select=nombre,detalle,precio,foto_url,enlace&activo=eq.true&order=orden,created_at');
+const aGrande=rows=>rows.map(p=>({src:p.foto_url,titulo:p.nombre,sub:`${p.detalle} · ${money(p.precio)}`,oscuro:false,accion:p.enlace?{texto:'Cambiar color o diseño',href:p.enlace}:{texto:'Ver en la tienda',href:'tienda.html'}}));
+(async()=>{const box=$('.realProducts');if(!box)return;const rows=await productos;if(!rows?.length){box.innerHTML='<p class="status">Pronto agregaremos productos. Mientras tanto, <a href="disena.html"><u>diseña tu camisa</u></a>.</p>';return}
+  box.innerHTML=rows.map((p,i)=>`<article><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(p.nombre)} en grande"><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"></button><h3>${esc(p.nombre)}</h3><p>${esc(p.detalle)}</p><strong>${money(p.precio)}</strong>
+    <label class="tallaLbl">Talla <select class="tallaSel">${TALLAS_TIENDA.map(t=>`<option${t==='M'?' selected':''}>${t}</option>`).join('')}</select></label>
+    <button class="btn cart" data-name="${esc(p.nombre)}" data-detail="${esc(p.detalle)}" data-price="${+p.precio}" data-foto="${esc(p.foto_url)}">Agregar al carrito</button>${p.enlace?`<a class="btn ghost cambiar" href="${esc(p.enlace)}">Cambiar color o diseño</a>`:''}</article>`).join('');
+  const lista=aGrande(rows);lista.forEach(it=>it.accion=it.accion.href==='tienda.html'?null:it.accion);
+  box.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verGrande(lista,+z.dataset.i)})})();
+/* ---------- Carrusel de la tienda en el Inicio ---------- */
+(async()=>{const box=$('#carrusel');if(!box)return;const rows=await productos;if(!rows?.length){box.closest('section').hidden=true;return}
+  const pista=box.querySelector('.pista');pista.innerHTML=rows.map((p,i)=>`<article class="slide"><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(p.nombre)} en grande"><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"></button><b>${esc(p.nombre)}</b><span>${esc(p.detalle.split(' • ')[0])}</span><strong>${money(p.precio)}</strong></article>`).join('');
+  const lista=aGrande(rows);pista.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verGrande(lista,+z.dataset.i)});
+  const paso=()=>pista.querySelector('.slide').getBoundingClientRect().width+16;
+  const mover=d=>{const fin=pista.scrollLeft+d*paso();pista.scrollTo({left:fin>pista.scrollWidth-pista.clientWidth+5?0:fin<-5?pista.scrollWidth:fin,behavior:'smooth'})};
+  box.querySelector('.cPrev').onclick=()=>mover(-1);box.querySelector('.cSig').onclick=()=>mover(1);
+  // avanza solo cada 4 s; se detiene mientras el cliente lo toca o pasa el mouse
+  let quieto=false;['pointerenter','focusin','touchstart'].forEach(ev=>box.addEventListener(ev,()=>quieto=true,{passive:true}));['pointerleave','focusout'].forEach(ev=>box.addEventListener(ev,()=>quieto=false));
+  if(!matchMedia('(prefers-reduced-motion: reduce)').matches)setInterval(()=>{if(!quieto&&!document.hidden)mover(1)},4000)})();
 
 /* ---------- Videos del proceso (portada y Nosotros) ---------- */
 function youtubeId(u){const m=String(u).match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/))([\w-]{11})/);return m?.[1]}
@@ -73,7 +113,7 @@ $('#entrega')?.addEventListener('change',e=>{$('#direccionBox').hidden=e.target.
 
 $('#pedidoForm')?.addEventListener('submit',async e=>{e.preventDefault();const f=e.target,btn=f.querySelector('button[type=submit]'),st=$('#pedidoStatus'),c=getCart();if(!c.length)return;
   btn.disabled=true;st.textContent='Enviando…';
-  try{const items=[];for(const it of c){const links=[];if(sbReady()){for(const a of archivosDe(it))links.push(`${a.lado?a.lado+': ':''}${a.codigo?`diseño de catálogo ${a.codigo}`:a.url||await uploadFile(a)}`);if(it.vista)links.push(`Vista: ${await uploadFile({nombre:'vista.jpg',data:it.vista})}`)}
+  try{const items=[];for(const it of c){const links=[];if(sbReady()){for(const a of archivosDe(it))links.push(`${a.lado?a.lado+': ':''}${a.codigo?`diseño de catálogo ${a.codigo}`:a.url||await uploadFile(a)}`);if(it.vista)links.push(`Vista: ${it.vista.startsWith('data:')?await uploadFile({nombre:'vista.jpg',data:it.vista}):new URL(it.vista,location.href).href}`)}
       items.push({nombre:it.nombre,detalle:it.detalle,cantidad:it.qty,precio_unitario:Math.round(it.precio),archivos:links})}
     const total=c.reduce((a,i)=>a+i.precio*i.qty,0),row={tipo:'pedido',nombre:field(f,'nombre'),telefono:field(f,'telefono'),correo:field(f,'correo')||null,entrega:field(f,'entrega'),direccion:field(f,'direccion')||null,notas:field(f,'notas')||null,items,total_estimado:Math.round(total)};
     await saveRecord(row);

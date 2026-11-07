@@ -15,7 +15,7 @@
 .cat h2{font-family:'Barlow Condensed',Impact,sans-serif;font-style:italic;font-weight:900;text-transform:uppercase;font-size:clamp(32px,4vw,48px);margin:0 0 14px;color:#0a1b30;letter-spacing:0;border-bottom:3px solid #1f78ff;padding-bottom:8px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px}
 .d{background:#fff;border-radius:14px;padding:10px 10px 14px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 22px #0614261a}
-.d .pv{aspect-ratio:1;border-radius:10px;display:grid;place-items:center;padding:12px;background:#151515}
+.d .pv{cursor:zoom-in;aspect-ratio:1;border-radius:10px;display:grid;place-items:center;padding:12px;background:#151515}
 .d .pv img{max-width:100%;max-height:100%;object-fit:contain}
 .d.claro .pv{background:repeating-conic-gradient(#f1f3f6 0 25%,#fff 0 50%) 0 0/20px 20px}
 .d .cod{font-family:'Barlow Condensed',Impact,sans-serif;font-style:italic;font-weight:900;color:#1f78ff;font-size:20px;line-height:1;margin-top:6px}
@@ -28,7 +28,7 @@
 </style>
 </head>
 <body>
-<header><a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a><button id="menu" aria-label="Abrir menú">☰</button><nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="disenos.html">Diseños</a><a href="catalogo.html">Catálogo</a><a href="tienda.html">Tienda</a><a href="galeria.html">Galería</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="puntos.html">Puntos de entrega</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav></header>
+<header><a class="brand" href="index.html"><span>IM</span>PRESA<small>PRINT & TEXTILE SOLUTIONS</small></a><button id="menu" aria-label="Abrir menú">☰</button><nav id="nav"><a href="index.html">Inicio</a><a href="servicios.html">Servicios</a><a href="disena.html">Diseña tu camisa</a><a href="disenos.html">Diseños</a><a href="catalogo.html">Catálogo</a><a href="tienda.html">Tienda</a><a href="nosotros.html">Nosotros</a><a href="contacto.html">Contacto</a><a href="puntos.html">Puntos de entrega</a><a href="pedido.html">Mi pedido <b id="cartCount"></b></a></nav></header>
 <main>
 <section class="pageHero"><p class="eyebrow">DISEÑOS LISTOS</p><h1>Elige tu diseño</h1><p>Toca «Usar este diseño» y míralo en tu camiseta del color que quieras.</p></section>
 <section class="dis">
@@ -45,13 +45,14 @@ const rows=await sbGet('disenos?select=codigo,nombre,categoria,preview_url&activ
 const box=$('#cats');
 if(!rows.length){box.innerHTML='<p class="status">Pronto publicaremos diseños. Mientras tanto, sube el tuyo en <a href="disena.html"><u>Diseña tu camisa</u></a>.</p>';return}
 const cats=[...new Set(rows.map(r=>r.categoria))];let actual='Todos';
+const lista=rows.map(r=>({src:r.preview_url,titulo:`${r.codigo} · ${r.nombre}`,sub:r.categoria,oscuro:true,accion:{texto:'Usar este diseño',href:`disena.html?diseno=${encodeURIComponent(r.preview_url)}&dn=${encodeURIComponent(r.codigo)}`}}));
 function pintar(){box.innerHTML='';for(const c of cats){if(actual!=='Todos'&&c!==actual)continue;
   const sec=document.createElement('section');sec.className='cat';const h=document.createElement('h2');h.textContent=c;const g=document.createElement('div');g.className='grid';sec.append(h,g);
   for(const r of rows.filter(r=>r.categoria===c)){const d=document.createElement('article');d.className='d';
     d.innerHTML=`<div class="pv"><img loading="lazy" alt=""></div><span class="cod"></span><b></b><div class="acc"><a>Usar este diseño</a><button type="button" title="Ver sobre fondo claro" aria-label="Cambiar fondo de la vista">◐</button></div>`;
     d.querySelector('img').src=r.preview_url;d.querySelector('img').alt=r.nombre;d.querySelector('.cod').textContent=r.codigo;d.querySelector('b').textContent=r.nombre;
     d.querySelector('a').href=`disena.html?diseno=${encodeURIComponent(r.preview_url)}&dn=${encodeURIComponent(r.codigo)}`;
-    d.querySelector('button').onclick=()=>d.classList.toggle('claro');g.append(d)}
+    d.querySelector('button').onclick=()=>d.classList.toggle('claro');d.querySelector('.pv').onclick=()=>verGrande(lista,rows.indexOf(r));d.querySelector('.pv').setAttribute('role','button');d.querySelector('.pv').tabIndex=0;g.append(d)}
   box.append(sec)}}
 $('#chips').innerHTML=['Todos',...cats].map(c=>`<button type="button" class="${c==='Todos'?'on':''}">${esc(c)}</button>`).join('');
 $$('#chips button').forEach(b=>b.onclick=()=>{actual=b.textContent;$$('#chips button').forEach(x=>x.classList.toggle('on',x===b));pintar()});

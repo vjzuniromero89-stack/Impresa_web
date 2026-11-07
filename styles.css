@@ -11,3 +11,19 @@
 @media(max-width:520px){.pedidoVista{width:100%;height:auto;aspect-ratio:1}}
 nav a{white-space:nowrap}
 @media(max-width:1240px){#menu{display:grid;place-items:center}nav{display:none;position:absolute;top:72px;left:3%;right:3%;background:#081a2ef5;padding:15px;border:1px solid #24577f;border-radius:14px;flex-direction:column;gap:4px;box-shadow:0 20px 50px #0008}nav.open{display:flex}nav a{font-size:16px;padding:13px;border-radius:8px}nav a:hover{background:#0d2b49}}
+/* vista en grande */
+.vg{width:min(980px,96vw);max-height:94vh;padding:46px 56px 18px;border:1px solid #1d4d77;border-radius:16px;background:#0b2037;color:#eaf4ff;overflow:hidden}
+.vg::backdrop{background:#020a14e6}
+.vg figure{margin:0;display:grid;gap:10px}
+.vg .vgImg{height:min(70vh,760px);display:grid;place-items:center;border-radius:12px;background:#151515;padding:14px}
+.vg.claro .vgImg{background:repeating-conic-gradient(#e9edf2 0 25%,#fff 0 50%) 0 0/24px 24px}
+.vg.foto .vgImg{background:#eef2f7;padding:0}
+.vg .vgImg img{max-width:100%;max-height:100%;object-fit:contain}
+.vg figcaption{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.vg figcaption b{font-size:18px}.vg figcaption span{color:#9fc0da;font-size:13px}
+.vgX{position:absolute;top:8px;right:12px;background:none;border:0;color:#fff;font-size:32px;line-height:1;cursor:pointer}
+.vgN{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:62px;border:0;border-radius:10px;background:#102b47cc;color:#fff;font-size:34px;cursor:pointer}
+.vgP{left:8px}.vgS{right:8px}
+.vgAcc{display:flex;gap:10px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}.vgAcc .btn{padding:11px 18px}
+@media(max-width:600px){.vg{padding:44px 10px 12px}.vg .vgImg{height:62vh}.vgN{width:34px;height:52px;font-size:28px;top:auto;bottom:70px;transform:none}.vgAcc .btn{flex:1;text-align:center}}
+
+.realProducts .zoom img{transition:transform .3s}.realProducts .zoom:hover img{transform:scale(1.03)}.realProducts .zoom{cursor:zoom-in}.tallaLbl{display:flex;align-items:center;gap:8px;font-size:13px}.tallaLbl select{width:auto;margin:0;padding:8px}.realProducts .cambiar{text-align:center;padding:10px;font-size:13px}
