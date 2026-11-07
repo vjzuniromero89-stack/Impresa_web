@@ -9,7 +9,7 @@ async function entrar(){const {data:{session}}=await sb.auth.getSession();
   if(!session){$('#login').hidden=false;$('#panel').hidden=true;$('#salir').hidden=true;return}
   const {data:ok,error}=await sb.rpc('es_admin');
   if(error||!ok){await sb.auth.signOut();$('#login').hidden=false;$('#loginMsg').className='msg err';$('#loginMsg').textContent='Esta cuenta no tiene permiso de administrador.';return}
-  $('#login').hidden=true;$('#panel').hidden=false;$('#salir').hidden=false;cargar('productos')}
+  $('#login').hidden=true;$('#panel').hidden=false;$('#salir').hidden=false;cargar('disenos')}
 $('#login').addEventListener('submit',async e=>{e.preventDefault();const f=e.target,m=$('#loginMsg');m.className='msg';m.textContent='Entrando…';
   const {error}=await sb.auth.signInWithPassword({email:f.email.value.trim(),password:f.password.value});
   if(error){m.className='msg err';m.textContent='Correo o contraseña incorrectos.';return}
@@ -30,8 +30,8 @@ async function subir(file,carpeta){if(file.size>50*1024*1024)throw new Error('El
 const TABLAS={
   productos:{orden:'orden',foto:'foto_url',carpeta:'productos',vacio:{nombre:'',detalle:'',precio:0,foto_url:'',orden:99,activo:true},
     campos:[['nombre','Nombre','text',1],['detalle','Detalle (ej. Camiseta negra • DTF • diseño D007)','text'],['precio','Precio C$','number',1],['enlace','Enlace «Cambiar color» (opcional, empieza con disena.html?)','text'],['orden','Orden','number'],['activo','Visible en la web','check']]},
-  disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,orden:99,activo:true},
-    campos:[['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
+  disenos:{orden:'orden',foto:'preview_url',carpeta:'disenos',fotoTxt:'vista',vacio:{codigo:'',nombre:'',categoria:'',preview_url:'',archivo:null,precio:500,color:'Negro',orden:99,activo:true},
+    campos:[['codigo','Código (D011)','text',1],['nombre','Nombre','text',1],['categoria','Categoría (ej. Anime)','text',1],['precio','Precio en la tienda C$','number'],['color','Color de camiseta en la tienda (ej. Negro, Blanco, Rosado)','text'],['archivo','Archivo de impresión','impresion'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   videos:{orden:'orden',foto:'portada_url',carpeta:'videos',vacio:{titulo:'',portada_url:'',video_url:'',orden:99,activo:true},
     campos:[['titulo','Título','text',1],['video_url','Video: enlace de YouTube o archivo','video'],['orden','Orden','number'],['activo','Visible en la web','check']]},
   puntos_entrega:{orden:'orden',vacio:{nombre:'',direccion:'',referencia:'',horario:'12:00 m – 2:00 pm',lat:null,lng:null,orden:99,activo:true},

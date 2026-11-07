@@ -6,27 +6,39 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 $('#menu')?.addEventListener('click',()=>$('#nav')?.classList.toggle('open')); $$('#nav a').forEach(a=>a.addEventListener('click',()=>$('#nav')?.classList.remove('open')));
 
 /* ---------- Vista en grande (diseños, galería) ----------
-   verGrande(lista, i): lista = [{src, titulo, sub, oscuro, accion:{texto, href | onclick}}] */
+   verGrande(lista, i): lista = [{src, titulo, sub, oscuro, diseno, accion:{texto, href | onclick}}]
+   diseno: imagen del diseño solo; muestra el botón «Ver diseño» / «Ver camisa» */
 let _vg=null;
 function verGrande(lista,i=0){
   if(!_vg){_vg=document.createElement('dialog');_vg.className='vg';_vg.setAttribute('aria-label','Vista en grande');
-    _vg.innerHTML='<button type="button" class="vgX" aria-label="Cerrar">×</button><button type="button" class="vgN vgP" aria-label="Anterior">‹</button><figure><div class="vgImg"><img alt=""></div><figcaption><b></b><span></span></figcaption></figure><button type="button" class="vgN vgS" aria-label="Siguiente">›</button><div class="vgAcc"><button type="button" class="btn ghost vgFondo">◐ Cambiar fondo</button><a class="btn vgBtn"></a></div>';
+    _vg.innerHTML='<button type="button" class="vgX" aria-label="Cerrar">×</button><button type="button" class="vgN vgP" aria-label="Anterior">‹</button><figure><div class="vgImg"><img alt=""></div><figcaption><b></b><span></span></figcaption></figure><button type="button" class="vgN vgS" aria-label="Siguiente">›</button><div class="vgAcc"><button type="button" class="btn ghost vgDis" hidden>Ver diseño</button><button type="button" class="btn ghost vgFondo">◐ Cambiar fondo</button><a class="btn vgBtn"></a></div>';
     document.body.appendChild(_vg);
     _vg.querySelector('.vgX').onclick=()=>_vg.close();
     _vg.addEventListener('click',e=>{if(e.target===_vg)_vg.close()});
     _vg.querySelector('.vgFondo').onclick=()=>_vg.classList.toggle('claro');
+    _vg.querySelector('.vgDis').onclick=()=>{_vg._dis=!_vg._dis;_vg._pintar()};
     _vg.querySelector('.vgP').onclick=()=>_vg._ir(-1);_vg.querySelector('.vgS').onclick=()=>_vg._ir(1);
     _vg.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')_vg._ir(-1);if(e.key==='ArrowRight')_vg._ir(1)});
     let x0=null;_vg.addEventListener('touchstart',e=>x0=e.touches[0].clientX,{passive:true});
     _vg.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>50)_vg._ir(dx<0?1:-1);x0=null})}
-  const pintar=()=>{const it=lista[i],img=_vg.querySelector('img'),a=_vg.querySelector('.vgBtn'),k=i;
-    if(typeof it.src==='function'){img.style.opacity=.35;Promise.resolve(it.src()).then(u=>{if(k===i){img.src=u;img.style.opacity=1}})}else{img.src=it.src;img.style.opacity=1}img.alt=it.titulo||'';
+  const pintar=()=>{const it=lista[i],img=_vg.querySelector('img'),a=_vg.querySelector('.vgBtn'),k=i,dis=_vg._dis&&it.diseno;
+    _vg.classList.toggle('verDis',!!dis);const bd=_vg.querySelector('.vgDis');bd.hidden=!it.diseno;bd.textContent=dis?'Ver camisa':'🔍 Ver diseño';
+    if(dis){if(typeof it.diseno==='function'){img.style.opacity=.35;Promise.resolve(it.diseno()).then(u=>{if(k===i&&_vg._dis){img.src=u;img.style.opacity=1}})}else{img.src=it.diseno;img.style.opacity=1}}
+    else if(typeof it.src==='function'){img.style.opacity=.35;Promise.resolve(it.src()).then(u=>{if(k===i&&!(_vg._dis&&lista[i].diseno)){img.src=u;img.style.opacity=1}})}else{img.src=it.src;img.style.opacity=1}img.alt=it.titulo||'';
     _vg.querySelector('figcaption b').textContent=it.titulo||'';_vg.querySelector('figcaption span').textContent=it.sub||'';
-    _vg.classList.toggle('foto',!it.oscuro&&it.oscuro!==undefined);_vg.querySelector('.vgFondo').hidden=it.oscuro===false;
+    _vg.classList.toggle('foto',!dis&&!it.oscuro&&it.oscuro!==undefined);_vg.querySelector('.vgFondo').hidden=!!dis||it.oscuro===false;
     a.hidden=!it.accion;if(it.accion){a.textContent=it.accion.texto;if(it.accion.href){a.href=it.accion.href;a.onclick=null}else{a.removeAttribute('href');a.onclick=()=>{_vg.close();it.accion.onclick()}}}
     $$('.vgN').forEach(b=>b.hidden=lista.length<2)};
-  _vg._ir=d=>{i=(i+d+lista.length)%lista.length;pintar()};
-  pintar();if(!_vg.open)_vg.showModal()}
+  _vg._ir=d=>{i=(i+d+lista.length)%lista.length;pintar()};_vg._pintar=pintar;
+  if(!_vg.open)_vg._dis=false;pintar();if(!_vg.open)_vg.showModal()}
+
+/* Diseño con marca de agua «IMPRESA» en diagonal (para mostrarlo en grande sin que lo copien limpio) */
+const _marca={};
+function conMarca(src){return _marca[src]??=(async()=>{const img=await cargarImg(src),S=1000,c=document.createElement('canvas');c.width=c.height=S;const x=c.getContext('2d');
+  x.fillStyle='#151515';x.fillRect(0,0,S,S);const k=Math.min(S*.88/img.naturalWidth,S*.88/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;x.drawImage(img,(S-w)/2,(S-h)/2,w,h);
+  x.save();x.translate(S/2,S/2);x.rotate(-Math.PI/6);x.font='900 54px Arial, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillStyle='rgba(255,255,255,.16)';x.strokeStyle='rgba(0,0,0,.18)';x.lineWidth=2;
+  for(let yy=-S;yy<=S;yy+=120)for(let xx=-S*1.2+(yy/120%2?150:0);xx<=S*1.2;xx+=300){x.strokeText('IMPRESA',xx,yy);x.fillText('IMPRESA',xx,yy)}
+  x.restore();x.font='700 22px Arial, sans-serif';x.fillStyle='rgba(255,255,255,.55)';x.textAlign='right';x.fillText('© IMPRESA · Nicaragua',S-24,S-24);return c.toDataURL('image/jpeg',.9)})()}
 
 /* ---------- Supabase (REST, sin librería) ---------- */
 const sbReady=()=>CFG.supabaseUrl&&CFG.supabaseKey;
@@ -42,28 +54,41 @@ function updateCount(){const n=getCart().reduce((a,i)=>a+i.qty,0);$$('#cartCount
 function addItem(item){const c=getCart();c.push(item);return setCart(c)}
 updateCount();
 
-/* ---------- Tienda (productos desde Supabase; si falla, quedan los del HTML) ---------- */
+/* ---------- Tienda: cada diseño activo del administrador (pestaña Diseños) es un producto ---------- */
 document.addEventListener('click',e=>{const b=e.target.closest('.cart');if(!b)return;const t=b.closest('article')?.querySelector('.tallaSel')?.value;
   if(addItem({nombre:b.dataset.name,detalle:(b.dataset.detail||'')+(t?` • talla ${t}`:''),qty:1,precio:+b.dataset.price,vista:b.dataset.foto||undefined}))$('#cartStatus').innerHTML=`Agregado a tu pedido${t?` (talla ${esc(t)})`:''}. <a href="pedido.html"><u>Ver mi pedido</u></a>`});
 const TALLAS_TIENDA=['XS','S','M','L','XL','2XL','3XL'];
-const productos=sbGet('productos?select=nombre,detalle,precio,foto_url,enlace&activo=eq.true&order=orden,created_at');
-// Vista en grande de un producto: las flechas recorren los 17 colores de camiseta con el mismo diseño
-async function verColores(p){if(!p.enlace||typeof PRENDAS==='undefined'){verGrande([{src:p.foto_url,titulo:p.nombre,sub:`${p.detalle} · ${money(p.precio)}`,oscuro:false}],0);return}
-  const q=new URL(p.enlace,location.href).searchParams,cols=PRENDAS.camiseta.colores,ini=Math.max(0,cols.findIndex(c=>c.nombre===q.get('color')));
-  const prep=Promise.all([cargarPrenda('camiseta'),cargarImg(q.get('diseno'))]),cache={};
-  const dibujar=async c=>{const [,img]=await prep,t=document.createElement('canvas'),o=document.createElement('canvas');t.width=t.height=o.width=o.height=800;pintarCamisa(t.getContext('2d'),'camiseta','frente',c.hex,'M');
-    const x=o.getContext('2d'),g=x.createRadialGradient(400,320,0,400,320,560);g.addColorStop(0,'#a9b4c1');g.addColorStop(.7,'#8692a1');g.addColorStop(1,'#727e8d');x.fillStyle=g;x.fillRect(0,0,800,800);x.drawImage(t,0,0);
-    const w=28*8.1,h=w*img.naturalHeight/img.naturalWidth;x.drawImage(img,400-w/2,148,w,h);return o.toDataURL('image/jpeg',.9)}; // mismo tamaño y lugar que las fotos de la tienda
-  verGrande(cols.map(c=>{q.set('color',c.nombre);return {src:()=>cache[c.nombre]??=dibujar(c),titulo:p.nombre,sub:`Camiseta ${c.nombre.toLowerCase()} · DTF · ${money(p.precio)} · ‹ › otros colores`,oscuro:false,accion:{texto:'Pedir en este color',href:'disena.html?'+q.toString()}}}),ini)}
-const aGrande=rows=>rows.map(p=>({src:p.foto_url,titulo:p.nombre,sub:`${p.detalle} · ${money(p.precio)}`,oscuro:false,accion:p.enlace?{texto:'Cambiar color o diseño',href:p.enlace}:{texto:'Ver en la tienda',href:'tienda.html'}}));
-(async()=>{const box=$('.realProducts');if(!box)return;const rows=await productos;if(!rows?.length){box.innerHTML='<p class="status">Pronto agregaremos productos. Mientras tanto, <a href="disena.html"><u>diseña tu camisa</u></a>.</p>';return}
-  box.innerHTML=rows.map((p,i)=>`<article><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(p.nombre)} en grande"><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"></button><h3>${esc(p.nombre)}</h3><p>${esc(p.detalle)}</p><strong>${money(p.precio)}</strong>
+const disenosTienda=sbGet('disenos?select=codigo,nombre,categoria,preview_url,precio,color&activo=eq.true&order=orden,created_at');
+const precioDe=d=>d.precio!=null&&d.precio!==''?+d.precio:(CFG.precios?.tienda??500);
+const colorTienda=d=>(typeof PRENDAS!=='undefined'&&PRENDAS.camiseta.colores.find(c=>c.nombre===d.color))||{nombre:'Negro',hex:'#151515'};
+const enlaceDe=(d,color)=>`disena.html?prenda=camiseta&color=${encodeURIComponent(color)}&lado=frente&diseno=${encodeURIComponent(d.preview_url)}&dn=${encodeURIComponent(d.codigo)}`;
+const detalleDe=(d,c)=>`Camiseta color ${c.nombre.toLowerCase()} • DTF • diseño ${d.codigo}`;
+// Foto del producto: camiseta Klasiko teñida + el diseño, dibujada en el navegador (todas con el mismo tamaño y lugar)
+const _mk={};let _camiseta=null;
+function mockup(d,c){return _mk[d.codigo+'|'+c.nombre]??=(async()=>{_camiseta??=cargarPrenda('camiseta');await _camiseta;const img=await cargarImg(d.preview_url);
+  const t=document.createElement('canvas'),o=document.createElement('canvas');t.width=t.height=o.width=o.height=800;pintarCamisa(t.getContext('2d'),'camiseta','frente',c.hex,'M');
+  const x=o.getContext('2d'),g=x.createRadialGradient(400,320,0,400,320,560);g.addColorStop(0,'#a9b4c1');g.addColorStop(.7,'#8692a1');g.addColorStop(1,'#727e8d');x.fillStyle=g;x.fillRect(0,0,800,800);x.drawImage(t,0,0);
+  const k=Math.min(31*8.1/img.naturalWidth,330/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;x.drawImage(img,400-w/2,140,w,h); // máx. 31 cm de ancho, sin pasar del pecho
+  return o.toDataURL('image/jpeg',.88)})()}
+// Vista en grande: las flechas recorren los 17 colores de camiseta con el mismo diseño
+function verColores(d){const cols=PRENDAS.camiseta.colores,ini=Math.max(0,cols.findIndex(c=>c.nombre===colorTienda(d).nombre));
+  verGrande(cols.map(c=>({src:()=>mockup(d,c),titulo:`${d.codigo} · ${d.nombre}`,sub:`Camiseta color ${c.nombre.toLowerCase()} · DTF · ${money(precioDe(d))} · ‹ › otros colores`,oscuro:false,diseno:()=>conMarca(d.preview_url),accion:{texto:'Pedir en este color',href:enlaceDe(d,c.nombre)}})),ini)}
+// las fotos se dibujan cuando la tarjeta se acerca a la pantalla
+// respaldo: si el navegador no avisa (pestaña en segundo plano), se dibuja igual en unos segundos
+function pintarCuando(img,d,i=0){let hecho=false;const ir=()=>{if(hecho)return;hecho=true;io.disconnect();
+  mockup(d,colorTienda(d)).then(u=>{img.src=u;img.classList.add('lista');const b=img.closest('article')?.querySelector('.cart');if(b)b.dataset.foto=u}).catch(()=>{img.alt=`${d.nombre} (no se pudo cargar la foto)`})};
+  const io=new IntersectionObserver(es=>{if(es.some(e=>e.isIntersecting))ir()},{rootMargin:'400px'});io.observe(img);setTimeout(ir,2500+i*150)}
+const VACIO='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+(async()=>{const box=$('.realProducts');if(!box)return;const rows=await disenosTienda;if(!rows?.length){box.innerHTML='<p class="status">Pronto agregaremos productos. Mientras tanto, <a href="disena.html"><u>diseña tu camisa</u></a>.</p>';return}
+  box.innerHTML=rows.map((d,i)=>{const c=colorTienda(d);return `<article><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(d.nombre)} en grande"><img class="mk" src="${VACIO}" alt="${esc(d.nombre)}"></button><h3>${esc(d.nombre)}</h3><p>${esc(detalleDe(d,c))}</p><strong>${money(precioDe(d))}</strong>
     <label class="tallaLbl">Talla <select class="tallaSel">${TALLAS_TIENDA.map(t=>`<option${t==='M'?' selected':''}>${t}</option>`).join('')}</select></label>
-    <button class="btn cart" data-name="${esc(p.nombre)}" data-detail="${esc(p.detalle)}" data-price="${+p.precio}" data-foto="${esc(p.foto_url)}">Agregar al carrito</button>${p.enlace?`<a class="btn ghost cambiar" href="${esc(p.enlace)}">Cambiar color o diseño</a>`:''}</article>`).join('');
+    <button class="btn cart" data-name="${esc(d.nombre)}" data-detail="${esc(detalleDe(d,c))}" data-price="${precioDe(d)}">Agregar al carrito</button><a class="btn ghost cambiar" href="${esc(enlaceDe(d,c.nombre))}">Cambiar color o diseño</a></article>`}).join('');
+  box.querySelectorAll('img.mk').forEach((img,i)=>pintarCuando(img,rows[i],i));
   box.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verColores(rows[+z.dataset.i])})})();
 /* ---------- Carrusel de la tienda en el Inicio ---------- */
-(async()=>{const box=$('#carrusel');if(!box)return;const rows=await productos;if(!rows?.length){box.closest('section').hidden=true;return}
-  const pista=box.querySelector('.pista');pista.innerHTML=rows.map((p,i)=>`<article class="slide"><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(p.nombre)} en grande"><img src="${esc(p.foto_url)}" alt="${esc(p.nombre)}" loading="lazy"></button><b>${esc(p.nombre)}</b><span>${esc(p.detalle.split(' • ')[0])}</span><strong>${money(p.precio)}</strong></article>`).join('');
+(async()=>{const box=$('#carrusel');if(!box)return;const rows=await disenosTienda;if(!rows?.length){box.closest('section').hidden=true;return}
+  const pista=box.querySelector('.pista');pista.innerHTML=rows.map((d,i)=>`<article class="slide"><button type="button" class="zoom" data-i="${i}" aria-label="Ver ${esc(d.nombre)} en grande"><img class="mk" src="${VACIO}" alt="${esc(d.nombre)}"></button><b>${esc(d.nombre)}</b><span>Camiseta color ${esc(colorTienda(d).nombre.toLowerCase())}</span><strong>${money(precioDe(d))}</strong></article>`).join('');
+  pista.querySelectorAll('img.mk').forEach((img,i)=>pintarCuando(img,rows[i],i));
   pista.addEventListener('click',e=>{const z=e.target.closest('.zoom');if(z)verColores(rows[+z.dataset.i])});
   const paso=()=>pista.querySelector('.slide').getBoundingClientRect().width+16;
   const mover=d=>{const fin=pista.scrollLeft+d*paso();pista.scrollTo({left:fin>pista.scrollWidth-pista.clientWidth+5?0:fin<-5?pista.scrollWidth:fin,behavior:'smooth'})};

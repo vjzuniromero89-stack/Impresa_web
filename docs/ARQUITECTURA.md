@@ -101,3 +101,10 @@ Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfiel
 - `verGrande(lista, i)` (app.js): vista en grande compartida por Diseños, la ventana de diseños del diseñador y la tienda; `src` puede ser una función.
 - Diseñador, paso 05: nombre (y número) en la espalda con 6 letras de Google Fonts (Bebas Neue, Graduate, Bungee, Permanent Marker, Pacifico, Great Vibes), 7 colores y contorno. Se dibuja en canvas; al pedir se sube un PNG a 300 DPI. Cuenta como espalda para el precio.
 - Fotos de productos con fondo gris azulado (igual que el diseñador) para que la camiseta blanca se vea; `?v=2` en `foto_url` evita la caché vieja.
+
+## Tienda = diseños del administrador (2026-11-07)
+- Se borró `disenos.html` y la pestaña «Tienda» (tabla `productos`) del panel. Los diseños se agregan solo en **Administrador → Diseños (tienda)**; cada diseño **activo** sale solo en la Tienda, el carrusel del Inicio y la ventana de diseños del diseñador.
+- `disenos.precio` (vacío = `CFG.precios.tienda` o 500) y `disenos.color` (color de camiseta de la foto de la tienda). La foto se dibuja en el navegador (`mockup()` en app.js, camiseta + diseño, máx. 31 cm); `cargarImg()` pide CORS para imágenes del Storage.
+- Vista en grande: flechas = 17 colores; «Ver diseño» muestra el diseño solo con marca de agua «IMPRESA» en diagonal (`conMarca()`).
+- Bordado: tamaños propios (máx. 20 cm frente, 25 espalda, 10 muslo; empieza en 10/20/8). `analizarBordado()` cuenta colores principales (paleta 512): más de 8 o cobertura < 80 % = no se borda → bloquea Bordado (camiseta/conjunto pasan a DTF; Waffit no deja pedir).
+- D017–D019 (Adidas/Goku) quedan desactivados: solo se ven en el panel.

@@ -61,7 +61,8 @@ for(const p of Object.values(PRENDAS))if(p.colores.length&&Array.isArray(p.color
 const PCT_CM=100*8.1/800;
 
 const _cache={};
-function cargarImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src})}
+function cargarImg(src){return new Promise((res,rej)=>{const i=new Image();if(/^https?:/.test(src)&&!src.startsWith(location.origin))i.crossOrigin='anonymous'; // Storage de Supabase: sin esto el lienzo queda bloqueado
+  i.onload=()=>res(i);i.onerror=rej;i.src=src})}
 // Luz (0..1) y transparencia de cada píxel, una vez por prenda y lado
 const piezaDe=id=>PRENDAS[id].pieza||id;
 const zonaDe=(id,lado)=>PRENDAS[piezaDe(id)].zonas[lado];

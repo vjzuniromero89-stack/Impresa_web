@@ -36,7 +36,10 @@ function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();const ni=$('#na
   colocarImg(dImg,d,st.lado);$('#legCopia').hidden=!esConjunto()||st.lado==='legging'||!!st.lados.legging;
   $('#fondoBtn').hidden=!d.sinFondo;$('#fondoBtn').textContent=d.usarSinFondo?'Poner fondo':'Quitar fondo';
   $('#cm').max=maxCm(d.ratio);$('#cm').value=d.cm;$('#cmTxt').textContent=`${d.cm} cm de ancho`}
-function maxCm(ratio,lado=st.lado){const z=zonaDe(st.prenda,lado),k=pct(lado);return Math.max(3,Math.floor(Math.min(30,z.w/k,z.h/k/ratio)))}
+// Bordado: bastidor más chico que el DTF (máx. 20 cm al frente, 25 atrás, 10 en el muslo); empieza en 10/20/8 cm
+const LIM_BORD={max:{frente:20,espalda:25,legging:10},ini:{frente:10,espalda:20,legging:8}};
+function maxCm(ratio,lado=st.lado){const z=zonaDe(st.prenda,lado),k=pct(lado),tope=st.tec==='Bordado'?LIM_BORD.max[lado]??20:30;return Math.max(3,Math.floor(Math.min(tope,z.w/k,z.h/k/ratio)))}
+function tamInicial(d,lado){const m=maxCm(d.ratio,lado);return st.tec==='Bordado'?Math.min(LIM_BORD.ini[lado]??10,m):lado==='legging'?Math.min(10,m):m}
 function limitar(d,lado=st.lado){const z=zonaDe(st.prenda,lado);d.cm=Math.min(d.cm,maxCm(d.ratio,lado));const w=d.cm*pct(lado),h=w*d.ratio;
   d.cx=Math.min(Math.max(d.cx,z.x+w/2),z.x+z.w-w/2);d.cy=Math.min(Math.max(d.cy,z.y+h/2),z.y+z.h-h/2)}
 
@@ -52,7 +55,7 @@ $('#cerrarDis').addEventListener('click',()=>dlg.close());dlg.addEventListener('
 $('#verDisenos').addEventListener('click',async()=>{dlg.showModal();if(catalogo)return;const g=$('#gridDis');
   catalogo=await sbGet('disenos?select=codigo,nombre,preview_url&activo=eq.true&order=orden,created_at');
   if(!catalogo?.length){catalogo=null;g.innerHTML='<p>No se pudieron cargar los diseños. Cierra e inténtalo de nuevo.</p>';return}g.innerHTML='';
-  const ok=catalogo.filter(r=>permitido(r.preview_url)),lista=ok.map(r=>({src:r.preview_url,titulo:`${r.codigo} · ${r.nombre}`,oscuro:true,accion:{texto:'Usar en mi camisa',onclick:()=>{dlg.close();usarUrl(r.preview_url,r.codigo)}}}));
+  const ok=catalogo.filter(r=>permitido(r.preview_url)),lista=ok.map(r=>({src:()=>conMarca(r.preview_url),titulo:`${r.codigo} · ${r.nombre}`,oscuro:true,accion:{texto:'Usar en mi camisa',onclick:()=>{dlg.close();usarUrl(r.preview_url,r.codigo)}}}));
   for(const r of ok){const b=document.createElement('button');b.type='button';b.className='dItem';b.innerHTML='<img loading="lazy" alt=""><span></span>';
     b.querySelector('img').src=r.preview_url;b.querySelector('img').alt=r.nombre;b.querySelector('span').textContent=`${r.codigo} · ${r.nombre}`;
     b.onclick=()=>verGrande(lista,ok.indexOf(r));g.append(b)}});
@@ -61,7 +64,7 @@ function usarArchivo(f,codigo=null){
   if(f.size>8e6){alert('La imagen pesa más de 8 MB. Prueba con una más liviana.');return}
   const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const z=Z(),sf=f.type==='image/svg+xml'?null:quitarFondo(img);
     const d={nombre:f.name,codigo,orig:{data:r.result,ratio:img.naturalHeight/img.naturalWidth||1},sinFondo:sf,usarSinFondo:!!sf};aplicarFondo(d);
-    d.cm=st.lado==='legging'?Math.min(10,maxCm(d.ratio)):maxCm(d.ratio);/* 30 cm por defecto (o lo que quepa); en el muslo del legging, 10 cm */d.cx=z.x+z.w/2;d.cy=st.lado==='legging'?z.y+z.h*0.4:z.y+d.cm*pct()*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
+    d.cm=tamInicial(d,st.lado);/* DTF: 30 cm (o lo que quepa), muslo 10; bordado: 10 al frente */cargarImg(d.data).then(i=>{d.bordado=analizarBordado(i);revisarBordado()});d.cx=z.x+z.w/2;d.cy=st.lado==='legging'?z.y+z.h*0.4:z.y+d.cm*pct()*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
 function aplicarFondo(d){const v=d.usarSinFondo&&d.sinFondo?d.sinFondo:d.orig;d.data=v.data;d.ratio=v.ratio;
   if(d.usarSinFondo&&d.sinFondo&&!/-sin-fondo\.png$/.test(d.nombre))d.nombre=d.nombre.replace(/\.[^.]+$/,'')+'-sin-fondo.png';else if(!d.usarSinFondo)d.nombre=d.nombre.replace(/-sin-fondo\.png$/,'.png')}
 $('#fondoBtn').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d?.sinFondo)return;d.usarSinFondo=!d.usarSinFondo;aplicarFondo(d);limitar(d);mostrarDiseno()});
@@ -93,9 +96,9 @@ function quitarFondo(img){const max=4000,s=Math.min(1,max/Math.max(img.naturalWi
   return {data:o.toDataURL('image/png'),ratio:o.height/o.width}}
 $('#cm').addEventListener('input',e=>{const d=st.lados[st.lado];if(!d)return;d.cm=+e.target.value;limitar(d);mostrarDiseno()});
 $('#centrar').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;d.cx=Z().x+Z().w/2;limitar(d);mostrarDiseno()});
-$('#quitar').addEventListener('click',()=>{st.lados[st.lado]=null;mostrarDiseno();calc()});
+$('#quitar').addEventListener('click',()=>{st.lados[st.lado]=null;revisarBordado();mostrarDiseno();calc()});
 // conjunto: el mismo diseño también en el muslo del legging
-$('#legCopia').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;const z=zonaDe(st.prenda,'legging'),n={...d,cm:Math.min(10,maxCm(d.ratio,'legging')),cx:z.x+z.w/2,cy:z.y+z.h*0.4};
+$('#legCopia').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;const z=zonaDe(st.prenda,'legging'),n={...d,cm:tamInicial(d,'legging'),cx:z.x+z.w/2,cy:z.y+z.h*0.4};
   limitar(n,'legging');st.lados.legging=n;$('.ladoBtn[data-lado=legging]').click();calc()});
 let drag=null;
 dImg.addEventListener('pointerdown',e=>{const d=st.lados[st.lado];if(!d)return;e.preventDefault();dImg.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:d.cx,cy:d.cy}});
@@ -126,18 +129,36 @@ function renderColores(){const box=$('#colores');box.innerHTML='';const lista=P(
   const lb=$('#coloresLeg');$('#legBox').hidden=!esConjunto();lb.innerHTML='';if(esConjunto())PRENDAS.legging.colores.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='sw'+(c===st.colorLeg?' on':'');b.style.background=c.hex;b.title=c.nombre;b.setAttribute('aria-label',c.nombre);b.setAttribute('aria-pressed',c===st.colorLeg);
     b.onclick=()=>{st.colorLeg=c;if(st.lado==='espalda')$('.ladoBtn[data-lado=frente]').click();renderColores()};lb.appendChild(b)});
   $('#colorLegNombre').textContent=st.colorLeg.nombre;pintar()}
-$$('input[name=tec]').forEach(r=>r.addEventListener('change',()=>{st.tec=r.value;notaTec();renderColores();calc()}));
+$$('input[name=tec]').forEach(r=>r.addEventListener('change',()=>{st.tec=r.value;ajustarTamanos();notaTec();revisarBordado();renderColores();mostrarDiseno();calc()}));
+// al cambiar DTF ↔ bordado, cada diseño toma el tamaño de esa técnica
+function ajustarTamanos(){for(const l of LADOS()){const d=st.lados[l];if(!d)continue;d.cm=tamInicial(d,l);limitar(d,l)}}
+/* ¿Se puede bordar? Cuenta los colores principales del diseño (paleta de 512 tonos) y cuánto cubren.
+   Bordable: hasta 8 colores que cubran al menos el 80 %; si no, tiene degradados o sombras tipo foto. */
+function analizarBordado(img){const s=Math.min(1,300/Math.max(img.naturalWidth,img.naturalHeight)),W=Math.max(1,Math.round(img.naturalWidth*s)),H=Math.max(1,Math.round(img.naturalHeight*s)),c=document.createElement('canvas');c.width=W;c.height=H;
+  const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0,W,H);const p=x.getImageData(0,0,W,H).data,cnt=new Map();let n=0;
+  for(let i=0;i<p.length;i+=4){if(p[i+3]<128)continue;const k=(p[i]>>5)<<6|(p[i+1]>>5)<<3|(p[i+2]>>5);cnt.set(k,(cnt.get(k)||0)+1);n++}
+  if(!n)return {apto:true,colores:0};const v=[...cnt.values()].sort((a,b)=>b-a),principales=v.filter(c=>c>=n*0.015).length,cubre=v.slice(0,8).reduce((a,b)=>a+b,0)/n;
+  return {apto:principales<=8&&cubre>=0.8,colores:principales,motivo:principales>8?`tiene muchos colores (${principales})`:'tiene degradados o sombras tipo foto'}}
+function malosBordado(){return LADOS().filter(l=>st.lados[l]?.bordado&&!st.lados[l].bordado.apto)}
+const LADO_TXT={frente:'del frente',espalda:'de la espalda',legging:'del legging'};
+function revisarBordado(){const malos=malosBordado(),r=$('input[name=tec][value=Bordado]');if(!r)return;const nota=$('#tecNota');
+  if(!malos.length){syncTecSolo();return}
+  const motivo=`El diseño ${LADO_TXT[malos[0]]} no se puede bordar: ${st.lados[malos[0]].bordado.motivo}.`;
+  if(P().tecnicas.includes('DTF')){r.disabled=true;r.closest('.tec').classList.add('off');r.closest('.tec').title=motivo;
+    if(st.tec==='Bordado'){st.tec='DTF';$('input[name=tec][value=DTF]').checked=true;ajustarTamanos();notaTec();mostrarDiseno();calc()}
+    nota.textContent=`${motivo} Se hace con DTF.`;nota.style.color='#ffce72'}
+  else{nota.textContent=`${motivo} La Waffit solo se borda: sube un logo más simple (pocos colores, sin degradados).`;nota.style.color='#ff9d8f'}}
 // Cada camisa admite sus técnicas: camiseta = DTF o bordado, Waffit = solo bordado
-function syncTec(){const ts=P().tecnicas;if(!ts.includes(st.tec))st.tec=ts[0];
-  $$('input[name=tec]').forEach(r=>{const ok=ts.includes(r.value);r.disabled=!ok;r.checked=r.value===st.tec;r.closest('.tec').classList.toggle('off',!ok)});notaTec()}
-function notaTec(){stage.classList.toggle('bordado',st.tec==='Bordado');
+function syncTec(){const ts=P().tecnicas;if(!ts.includes(st.tec))st.tec=ts[0];syncTecSolo()}
+function syncTecSolo(){const ts=P().tecnicas;$$('input[name=tec]').forEach(r=>{const ok=ts.includes(r.value);r.disabled=!ok;r.checked=r.value===st.tec;r.closest('.tec').classList.toggle('off',!ok);r.closest('.tec').title=''});notaTec()}
+function notaTec(){stage.classList.toggle('bordado',st.tec==='Bordado');$('#tecNota').style.color='';
   $('#tecNota').textContent=st.tec==='Bordado'?`Bordado${st.prenda==='waffit'?' (la Waffit solo se borda)':''}: funciona mejor con logos de pocos colores y sin degradados. IMPRESA revisa tu logo antes de bordar.`:'DTF: impresión a todo color, perfecta para diseños grandes, fotos y degradados.'}
 $$('input[name=prenda]').forEach(r=>{r.checked=r.value===st.prenda;r.addEventListener('change',async()=>{st.prenda=r.value;await cargarPrenda(st.prenda);st.vista=ang=st.lado==='espalda'?180:0;
   $('.ladoBtn[data-lado=frente]').textContent=st.prenda==='waffit'?'Frente (pecho)':esConjunto()?'Camiseta frente':'Frente';$('.ladoBtn[data-lado=espalda]').textContent=esConjunto()?'Camiseta espalda':'Espalda';
   $('.ladoBtn[data-lado=legging]').hidden=!esConjunto();if(!esConjunto()&&st.lado==='legging')$('.ladoBtn[data-lado=frente]').click();
   for(const l of LADOS())if(st.lados[l])limitar(st.lados[l],l); // el diseño se ajusta a la nueva zona
   $$('#audience option').forEach(o=>o.disabled=(!P().tallasNino&&/Niñ/.test(o.value))||(!!P().soloMujer&&!/Mujer|Niña/.test(o.value)));if($('#audience option:checked').disabled)$('#audience').value=P().soloMujer?'Mujer':'Hombre';
-  syncTec();renderTallas();renderColores();actualizarNombre(false);mostrarDiseno();calc()})});
+  syncTec();ajustarTamanos();revisarBordado();renderTallas();renderColores();actualizarNombre(false);mostrarDiseno();calc()})});
 function renderTallas(){const prev=Object.fromEntries($$('.qty').map(q=>[q.dataset.talla,q.value]));const t=TALLAS[/Niñ/.test($('#audience').value)?'nino':'adulto'];
   $('#sizes').innerHTML=t.map(x=>`<label>${x}<input class="qty" type="number" min="0" max="999" inputmode="numeric" value="${prev[x]??(x==='M'||x==='8'?1:0)}" data-talla="${x}"></label>`).join('');
   $$('.qty').forEach(q=>q.addEventListener('input',()=>{calc();pintar()}));calc();pintar()} // la etiqueta muestra la primera talla elegida
@@ -190,6 +211,7 @@ async function vista(){const con=l=>st.lados[l]||(l==='espalda'&&st.nombreImg),l
   return c.toDataURL('image/jpeg',0.82)}
 
 $('#add').addEventListener('click',async()=>{const q=totalQty();if(q<1){alert('Indica cuántas camisas quieres en cada talla.');return}
+  if(st.tec==='Bordado'&&malosBordado().length){alert($('#tecNota').textContent);return}
   if(!LADOS().some(l=>st.lados[l])&&!st.nombreImg&&!confirm('No subiste ningún diseño. ¿Agregar la camisa igual y enviar el diseño por WhatsApp?'))return;
   const tallas=$$('.qty').filter(x=>+x.value>0).map(x=>`${x.dataset.talla}: ${Math.floor(+x.value)}`).join(', ');
   const lados=LADOS().filter(l=>st.lados[l]).map(l=>`${l} ${st.lados[l].cm} cm${st.lados[l].codigo?` diseño ${st.lados[l].codigo}`:''}`).join(' + ')||'sin diseño subido';

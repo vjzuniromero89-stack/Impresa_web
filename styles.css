@@ -27,3 +27,6 @@ nav a{white-space:nowrap}
 @media(max-width:600px){.vg{padding:44px 10px 12px}.vg .vgImg{height:62vh}.vgN{width:34px;height:52px;font-size:28px;top:auto;bottom:70px;transform:none}.vgAcc .btn{flex:1;text-align:center}}
 
 .realProducts .zoom img{transition:transform .3s}.realProducts .zoom:hover img{transform:scale(1.03)}.realProducts .zoom{cursor:zoom-in}.tallaLbl{display:flex;align-items:center;gap:8px;font-size:13px}.tallaLbl select{width:auto;margin:0;padding:8px}.realProducts .cambiar{text-align:center;padding:10px;font-size:13px}
+
+img.mk{aspect-ratio:1;background:radial-gradient(circle at 50% 40%,#a9b4c1,#8692a1 70%,#727e8d);opacity:.55}img.mk.lista{opacity:1;transition:opacity .3s}
+.vg.verDis .vgImg{padding:4%}.vg.verDis:not(.claro) .vgImg{background:#151515}
