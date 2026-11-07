@@ -61,7 +61,7 @@ function usarArchivo(f,codigo=null){
   if(f.size>8e6){alert('La imagen pesa más de 8 MB. Prueba con una más liviana.');return}
   const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const z=Z(),sf=f.type==='image/svg+xml'?null:quitarFondo(img);
     const d={nombre:f.name,codigo,orig:{data:r.result,ratio:img.naturalHeight/img.naturalWidth||1},sinFondo:sf,usarSinFondo:!!sf};aplicarFondo(d);
-    d.cm=maxCm(d.ratio);/* 30 cm por defecto, o lo más grande que quepa en la zona (pecho de Waffit, muslo) */d.cx=z.x+z.w/2;d.cy=st.lado==='legging'?z.y+z.h*0.4:z.y+d.cm*pct()*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
+    d.cm=st.lado==='legging'?Math.min(10,maxCm(d.ratio)):maxCm(d.ratio);/* 30 cm por defecto (o lo que quepa); en el muslo del legging, 10 cm */d.cx=z.x+z.w/2;d.cy=st.lado==='legging'?z.y+z.h*0.4:z.y+d.cm*pct()*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
 function aplicarFondo(d){const v=d.usarSinFondo&&d.sinFondo?d.sinFondo:d.orig;d.data=v.data;d.ratio=v.ratio;
   if(d.usarSinFondo&&d.sinFondo&&!/-sin-fondo\.png$/.test(d.nombre))d.nombre=d.nombre.replace(/\.[^.]+$/,'')+'-sin-fondo.png';else if(!d.usarSinFondo)d.nombre=d.nombre.replace(/-sin-fondo\.png$/,'.png')}
 $('#fondoBtn').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d?.sinFondo)return;d.usarSinFondo=!d.usarSinFondo;aplicarFondo(d);limitar(d);mostrarDiseno()});
@@ -95,7 +95,7 @@ $('#cm').addEventListener('input',e=>{const d=st.lados[st.lado];if(!d)return;d.c
 $('#centrar').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;d.cx=Z().x+Z().w/2;limitar(d);mostrarDiseno()});
 $('#quitar').addEventListener('click',()=>{st.lados[st.lado]=null;mostrarDiseno();calc()});
 // conjunto: el mismo diseño también en el muslo del legging
-$('#legCopia').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;const z=zonaDe(st.prenda,'legging'),n={...d,cm:maxCm(d.ratio,'legging'),cx:z.x+z.w/2,cy:z.y+z.h*0.4};
+$('#legCopia').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;const z=zonaDe(st.prenda,'legging'),n={...d,cm:Math.min(10,maxCm(d.ratio,'legging')),cx:z.x+z.w/2,cy:z.y+z.h*0.4};
   limitar(n,'legging');st.lados.legging=n;$('.ladoBtn[data-lado=legging]').click();calc()});
 let drag=null;
 dImg.addEventListener('pointerdown',e=>{const d=st.lados[st.lado];if(!d)return;e.preventDefault();dImg.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:d.cx,cy:d.cy}});

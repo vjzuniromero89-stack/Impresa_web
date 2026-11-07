@@ -43,7 +43,8 @@ const PRENDAS={
     nombre:'Conjunto en modelo',corto:'Conjunto',
     modelo:'assets/modelo',giro:[0,45,90,135,180,225,270,315],
     // pct = % del lienzo por cm (torso ≈ 14 % del lienzo ≈ 46 cm → 0.31 %/cm)
-    zonas:{frente:{x:42.5,y:23.5,w:15,h:22.5,pct:0.31},espalda:{x:42.5,y:23,w:15,h:23,pct:0.31,nombreY:32.5},legging:{x:50.5,y:53,w:9,h:15,pct:0.31}}, // legging: muslo izquierdo de quien lo usa
+    // escala real: la modelo ocupa 89.9 % del alto ≈ 165 cm → 0.545 % por cm (muslo ≈ 17 cm de ancho)
+    zonas:{frente:{x:42.5,y:23.5,w:15,h:22.5,pct:0.545},espalda:{x:42.5,y:23,w:15,h:23,pct:0.545,nombreY:32.5},legging:{x:50.5,y:53,w:9,h:15,pct:0.545}}, // legging: muslo izquierdo de quien lo usa
     eje:{0:[37.4,62.6],45:[42.4,62.5],90:[43.3,57.3],135:[41.3,61.6],180:[37.1,62.7],225:[39.1,59.6],270:[45.4,59],315:[37.9,57.3]},
     etiqueta:null,colores:[]
   },
