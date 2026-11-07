@@ -12,7 +12,18 @@
 .ladoBtn{flex:1;background:#102b47;border:1px solid #24577f;color:#cce7ff;padding:11px;border-radius:9px;font-weight:700;cursor:pointer}
 .ladoBtn.active{background:#1b9ce9;color:#fff;border-color:#1b9ce9}
 .ladoBtn small{display:block;font-weight:400;font-size:11px;opacity:.85}
-#stage{position:relative;aspect-ratio:1;border-radius:12px;background:radial-gradient(circle at 50% 40%,#f7f9fb,#d9dee4 70%,#c3cad2);overflow:hidden;touch-action:none;user-select:none}
+#stage{position:relative;aspect-ratio:1;border-radius:12px;background:radial-gradient(circle at 50% 40%,#f7f9fb,#d9dee4 70%,#c3cad2);overflow:hidden;touch-action:none;user-select:none;perspective:1400px;cursor:ew-resize}
+#giro{position:absolute;inset:0}
+.verDisenos{display:block;width:100%;text-align:center;padding:16px;border:0;border-radius:10px;background:#1b9ce9;color:#fff;font:inherit;font-weight:800;font-size:18px;cursor:pointer;box-shadow:0 6px 18px #1b9ce955}
+.verDisenos:hover{background:#2aa8f5}
+#dlgDisenos{width:min(960px,94vw);max-height:88vh;padding:0;border:1px solid #1d4d77;border-radius:16px;background:#0b2037;color:#eaf4ff}
+#dlgDisenos::backdrop{background:#020a14cc}
+.dlgHead{position:sticky;top:0;display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#0b2037;border-bottom:1px solid #1d4d77;z-index:1}
+.dlgHead b{font-size:20px}.dlgHead button{background:none;border:0;color:#fff;font-size:26px;cursor:pointer;line-height:1}
+#gridDis{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:16px 18px 20px}
+.dItem{background:#102b47;border:1.5px solid #24577f;border-radius:12px;padding:8px;color:#cce7ff;cursor:pointer;display:flex;flex-direction:column;gap:6px;font:inherit;font-size:13px;font-weight:700}
+.dItem:hover,.dItem:focus-visible{border-color:#29a8ff;background:#0f3558}
+.dItem img{width:100%;aspect-ratio:1;object-fit:contain;border-radius:8px;background:radial-gradient(circle at 50% 40%,#f7f9fb,#c3cad2)}
 #shirt{position:absolute;inset:0;width:100%;height:100%}
 #zona{position:absolute;border:1.5px dashed #1b9ce980;border-radius:6px;pointer-events:none;transition:opacity .2s}
 #zona:not(.vacia){opacity:0}#stage:hover #zona{opacity:1}
@@ -56,9 +67,9 @@
 <div class="dz">
   <div class="dzPrev">
     <div class="ladoTabs"><button type="button" class="ladoBtn active" data-lado="frente">Frente</button><button type="button" class="ladoBtn" data-lado="espalda">Espalda</button><button type="button" class="ladoBtn" data-lado="legging" hidden>Legging (muslo)</button></div>
-    <div id="stage"><canvas id="shirt" width="800" height="800" role="img" aria-label="Vista de la camiseta"></canvas><div id="zona" class="vacia"></div><img id="designImg2" alt="" hidden draggable="false" style="position:absolute;pointer-events:none;max-width:none"><img id="designImg" alt="Tu diseño" hidden draggable="false"></div>
-    <div id="sizeBox" hidden><label for="cm" style="flex-basis:100%">Tamaño: <span id="cmTxt"></span></label><input id="cm" type="range" min="5" max="30" step="1"><button type="button" class="btn ghost" id="centrar">Centrar</button><button type="button" class="btn ghost" id="fondoBtn" hidden>Poner fondo</button><button type="button" class="btn ghost" id="quitar" hidden>Quitar</button></div>
-    <p class="hint">Arrastra tu diseño con el dedo o el mouse. La línea punteada es el área que se puede imprimir.</p>
+    <div id="stage"><div id="giro"><canvas id="shirt" width="800" height="800" role="img" aria-label="Vista de la camiseta"></canvas><div id="zona" class="vacia"></div><img id="designImg2" alt="" hidden draggable="false" style="position:absolute;pointer-events:none;max-width:none"><img id="designImg" alt="Tu diseño" hidden draggable="false"></div></div>
+    <div id="sizeBox" hidden><label for="cm" style="flex-basis:100%">Tamaño: <span id="cmTxt"></span></label><input id="cm" type="range" min="5" max="30" step="1"><button type="button" class="btn ghost" id="centrar">Centrar</button><button type="button" class="btn ghost" id="fondoBtn" hidden>Poner fondo</button><button type="button" class="btn ghost" id="quitar" hidden>Quitar</button><button type="button" class="btn" id="legCopia" hidden>Poner también en el legging</button></div>
+    <p class="hint">Arrastra la camisa hacia los lados para girarla 360°. Arrastra tu diseño para moverlo. La línea punteada es el área que se puede imprimir.</p>
   </div>
 
   <form id="config" class="dzForm">
@@ -82,7 +93,8 @@
     <div id="legBox" hidden><b style="font-size:15px">Color del legging: <span id="colorLegNombre"></span></b><div id="coloresLeg" role="group" aria-label="Colores de legging" style="display:flex;flex-wrap:wrap;gap:9px;margin-top:8px"></div></div>
 
     <div class="step"><span>04</span><b>Tu diseño en <span id="ladoNombre">el frente</span></b></div>
-    <label class="upload2">＋ Subir logo o imagen<input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="tip">Si tu imagen tiene fondo de un solo color, lo quitamos solos. Máximo 8 MB.</p></label><p class="tip" style="margin-top:-6px">¿No tienes diseño? <a href="disenos.html"><u>Elige uno de nuestros diseños listos</u></a>.</p>
+    <button type="button" class="verDisenos" id="verDisenos">Elige uno de nuestros diseños</button>
+    <label class="upload2">＋ O sube tu logo o imagen<input id="file" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"><p class="tip">Si tu imagen tiene fondo de un solo color, lo quitamos solos. Máximo 8 MB.</p></label>
 
     <div class="step"><span>05</span><b>Cantidades por talla</b></div>
     <label>¿Para quién?<select id="audience"><option>Hombre</option><option>Mujer</option><option>Niño</option><option>Niña</option></select></label>
@@ -94,6 +106,7 @@
   </form>
 </div>
 </section>
+<dialog id="dlgDisenos" aria-labelledby="dlgTit"><div class="dlgHead"><b id="dlgTit">Nuestros diseños</b><button type="button" id="cerrarDis" aria-label="Cerrar">×</button></div><div id="gridDis"><p>Cargando diseños…</p></div></dialog>
 </main>
 <footer><b>IMPRESA</b><span>Print & Textile Solutions</span><small>Nicaragua</small></footer>
 <script src="config.js"></script><script src="app.js"></script><script src="camisas.js"></script><script src="disena.js"></script>

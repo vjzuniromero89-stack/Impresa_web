@@ -87,3 +87,8 @@ Diseños originales de IMPRESA (anime y osos streetwear) generados con Higgsfiel
 - Vista de frente = foto de una modelo (`assets/modelo/`): camiseta arriba y legging abajo, generadas en verde y magenta y separadas en `mascara.png` (R camiseta, G legging, B luz) para teñir cada pieza; la espalda usa la camiseta sola. Zonas con su propia escala (`pct`, ~0.5 %/cm): pecho y muslo izquierdo. `piezaDe()`, `zonaDe()` y `pctDe()` en `camisas.js`.
 - Precio de muestra en `config.js`: Conjunto DTF C$ 750 (+150 si la camiseta lleva frente y espalda).
 - Nota: `img.decode()` se quedaba colgado en algunos navegadores; se usa `cargarImg()` (onload).
+
+## Diseñador (2026-11-07)
+- Diseño nuevo = 30 cm o lo más grande que quepa en la zona (`maxCm`). «Elige uno de nuestros diseños» abre la tabla `disenos` en un `<dialog>` dentro de disena.html.
+- Giro 360°: arrastrar la camisa o los botones la voltea con `rotateY` (`#giro`); pasando 90° pinta la espalda. Solo hay fotos de frente y espalda (sin vistas de lado); en el conjunto la espalda es la camiseta sola.
+- Conjunto: botón «Poner también en el legging» copia el diseño al muslo.

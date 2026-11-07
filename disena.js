@@ -25,7 +25,7 @@ function mostrarDiseno(){const d=st.lados[st.lado];colocarZona();
   if(od){if(oi.src!==od.data)oi.src=od.data;const w=od.cm*pct(otro),h=w*od.ratio;Object.assign(oi.style,{width:w+'%',left:(od.cx-w/2)+'%',top:(od.cy-h/2)+'%'})}$('#ladoNombre').textContent=st.lado==='legging'?'el legging (muslo)':st.lado==='frente'?(st.prenda==='waffit'?'el pecho':esConjunto()?'el frente de la camiseta':'el frente'):'la espalda';
   $('#sizeBox').hidden=!d;$('#quitar').hidden=!d;zonaEl.classList.toggle('vacia',!d);
   if(!d){dImg.hidden=true;return}
-  dImg.hidden=false;if(dImg.src!==d.data)dImg.src=d.data;
+  dImg.hidden=false;if(dImg.src!==d.data)dImg.src=d.data;$('#legCopia').hidden=!esConjunto()||st.lado==='legging'||!!st.lados.legging;
   const w=d.cm*pct(),h=w*d.ratio;Object.assign(dImg.style,{width:w+'%',left:(d.cx-w/2)+'%',top:(d.cy-h/2)+'%'});
   $('#fondoBtn').hidden=!d.sinFondo;$('#fondoBtn').textContent=d.usarSinFondo?'Poner fondo':'Quitar fondo';
   $('#cm').max=maxCm(d.ratio);$('#cm').value=d.cm;$('#cmTxt').textContent=`${d.cm} cm de ancho`}
@@ -37,13 +37,23 @@ $('#file').addEventListener('change',e=>{const f=e.target.files[0];e.target.valu
 // Diseño del catálogo o la Galería (?diseno=…&dn=D007): solo archivos del sitio o del Storage público del proyecto
 const disenoListo=qs.get('diseno'),codigoDiseno=/^D\d{3,5}$/.test(qs.get('dn')||'')?qs.get('dn'):null;
 const permitido=u=>/^assets\/disenos-anime\/[\w-]+\.png$/.test(u)||u.startsWith(`${CFG.supabaseUrl}/storage/v1/object/public/media/`);
-if(disenoListo&&permitido(disenoListo))fetch(disenoListo).then(r=>r.ok?r.blob():null).then(b=>b&&usarArchivo(new File([b],disenoListo.split('/').pop().split('?')[0],{type:b.type||'image/png'}),codigoDiseno));
+const usarUrl=(u,codigo)=>fetch(u).then(r=>r.ok?r.blob():null).then(b=>b&&usarArchivo(new File([b],u.split('/').pop().split('?')[0],{type:b.type||'image/png'}),codigo));
+if(disenoListo&&permitido(disenoListo))usarUrl(disenoListo,codigoDiseno);
+// Diseños listos del catálogo en una ventana, sin salir del diseñador
+const dlg=$('#dlgDisenos');let catalogo=null;
+$('#cerrarDis').addEventListener('click',()=>dlg.close());dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
+$('#verDisenos').addEventListener('click',async()=>{dlg.showModal();if(catalogo)return;const g=$('#gridDis');
+  catalogo=await sbGet('disenos?select=codigo,nombre,preview_url&activo=eq.true&order=orden,created_at');
+  if(!catalogo?.length){catalogo=null;g.innerHTML='<p>No se pudieron cargar los diseños. Cierra e inténtalo de nuevo.</p>';return}g.innerHTML='';
+  for(const r of catalogo){if(!permitido(r.preview_url))continue;const b=document.createElement('button');b.type='button';b.className='dItem';b.innerHTML='<img loading="lazy" alt=""><span></span>';
+    b.querySelector('img').src=r.preview_url;b.querySelector('img').alt=r.nombre;b.querySelector('span').textContent=`${r.codigo} · ${r.nombre}`;
+    b.onclick=()=>{dlg.close();usarUrl(r.preview_url,r.codigo)};g.append(b)}});
 function usarArchivo(f,codigo=null){
   if(!/^image\/(png|jpeg|webp|svg\+xml)$/.test(f.type)){alert('Sube una imagen PNG, JPG, WEBP o SVG.');return}
   if(f.size>8e6){alert('La imagen pesa más de 8 MB. Prueba con una más liviana.');return}
   const r=new FileReader();r.onload=()=>{const img=new Image();img.onload=()=>{const z=Z(),sf=f.type==='image/svg+xml'?null:quitarFondo(img);
     const d={nombre:f.name,codigo,orig:{data:r.result,ratio:img.naturalHeight/img.naturalWidth||1},sinFondo:sf,usarSinFondo:!!sf};aplicarFondo(d);
-    d.cm=Math.min(st.lado==='legging'?8:st.prenda==='waffit'&&st.lado==='frente'?10:esConjunto()?22:25,maxCm(d.ratio));d.cx=z.x+z.w/2;d.cy=st.lado==='legging'?z.y+z.h*0.4:z.y+d.cm*pct()*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
+    d.cm=maxCm(d.ratio);/* 30 cm por defecto, o lo más grande que quepa en la zona (pecho de Waffit, muslo) */d.cx=z.x+z.w/2;d.cy=st.lado==='legging'?z.y+z.h*0.4:z.y+d.cm*pct()*d.ratio/2+(z.h>20?2:0);limitar(d);st.lados[st.lado]=d;mostrarDiseno();calc()};img.src=r.result};r.readAsDataURL(f)}
 function aplicarFondo(d){const v=d.usarSinFondo&&d.sinFondo?d.sinFondo:d.orig;d.data=v.data;d.ratio=v.ratio;
   if(d.usarSinFondo&&d.sinFondo&&!/-sin-fondo\.png$/.test(d.nombre))d.nombre=d.nombre.replace(/\.[^.]+$/,'')+'-sin-fondo.png';else if(!d.usarSinFondo)d.nombre=d.nombre.replace(/-sin-fondo\.png$/,'.png')}
 $('#fondoBtn').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d?.sinFondo)return;d.usarSinFondo=!d.usarSinFondo;aplicarFondo(d);limitar(d);mostrarDiseno()});
@@ -76,13 +86,27 @@ function quitarFondo(img){const max=4000,s=Math.min(1,max/Math.max(img.naturalWi
 $('#cm').addEventListener('input',e=>{const d=st.lados[st.lado];if(!d)return;d.cm=+e.target.value;limitar(d);mostrarDiseno()});
 $('#centrar').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;d.cx=Z().x+Z().w/2;limitar(d);mostrarDiseno()});
 $('#quitar').addEventListener('click',()=>{st.lados[st.lado]=null;mostrarDiseno();calc()});
+// conjunto: el mismo diseño también en el muslo del legging
+$('#legCopia').addEventListener('click',()=>{const d=st.lados[st.lado];if(!d)return;const z=zonaDe(st.prenda,'legging'),n={...d,cm:maxCm(d.ratio,'legging'),cx:z.x+z.w/2,cy:z.y+z.h*0.4};
+  limitar(n,'legging');st.lados.legging=n;$('.ladoBtn[data-lado=legging]').click();calc()});
 let drag=null;
 dImg.addEventListener('pointerdown',e=>{const d=st.lados[st.lado];if(!d)return;e.preventDefault();dImg.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,cx:d.cx,cy:d.cy}});
 dImg.addEventListener('pointermove',e=>{if(!drag)return;const d=st.lados[st.lado],b=stage.getBoundingClientRect();d.cx=drag.cx+(e.clientX-drag.x)/b.width*100;d.cy=drag.cy+(e.clientY-drag.y)/b.height*100;limitar(d);mostrarDiseno()});
 ['pointerup','pointercancel'].forEach(t=>dImg.addEventListener(t,()=>drag=null));
 
 /* ---------- Opciones ---------- */
-$$('.ladoBtn').forEach(b=>b.addEventListener('click',()=>{st.lado=b.dataset.lado;$$('.ladoBtn').forEach(x=>x.classList.toggle('active',x===b));pintar();mostrarDiseno()}));
+/* Giro 360°: arrastrar la camisa (o los botones) la voltea; pasando 90° se ve la espalda. Solo hay fotos de frente y espalda. */
+const giro=$('#giro');let ang=st.lado==='espalda'?180:0,anim=0,giroDrag=null;
+function ponerLado(l){if(st.lado===l)return;st.lado=l;$$('.ladoBtn').forEach(x=>x.classList.toggle('active',x.dataset.lado===l));pintar();mostrarDiseno()}
+function setAng(a){ang=a;const n=((a%360)+360)%360,atras=n>90&&n<270;
+  ponerLado(atras?'espalda':st.lado==='espalda'?'frente':st.lado);giro.style.transform=`rotateY(${atras?n-180:n>180?n-360:n}deg)`}
+function girarA(fin,lado){cancelAnimationFrame(anim);const ini=ang,t0=performance.now();
+  const paso=t=>{const k=Math.min(1,(t-t0)/450);setAng(ini+(fin-ini)*(1-Math.pow(1-k,3)));if(k<1)anim=requestAnimationFrame(paso);else if(lado)ponerLado(lado)};anim=requestAnimationFrame(paso)}
+const cerca=base=>base+Math.round((ang-base)/360)*360; // la vuelta más corta
+$$('.ladoBtn').forEach(b=>b.addEventListener('click',()=>{const l=b.dataset.lado;girarA(cerca(l==='espalda'?180:0),l)}));
+stage.addEventListener('pointerdown',e=>{if(e.target===dImg)return;cancelAnimationFrame(anim);stage.setPointerCapture(e.pointerId);giroDrag={x:e.clientX,ang}});
+stage.addEventListener('pointermove',e=>{if(giroDrag)setAng(giroDrag.ang+(e.clientX-giroDrag.x)/stage.clientWidth*360)});
+['pointerup','pointercancel'].forEach(t=>stage.addEventListener(t,()=>{if(!giroDrag)return;giroDrag=null;girarA(Math.round(ang/180)*180)}));
 function renderColores(){const box=$('#colores');box.innerHTML='';const lista=P().colores; // DTF y bordado van en cualquier color
   if(!lista.includes(st.color))st.color=lista.find(c=>c.nombre===st.color?.nombre)||lista[0];
   lista.forEach(c=>{const b=document.createElement('button');b.type='button';b.className='sw'+(c===st.color?' on':'');b.style.background=c.hex;const n=c.codigo?`${c.nombre} (${c.codigo})`:c.nombre;b.title=n;b.setAttribute('aria-label',n);b.setAttribute('aria-pressed',c===st.color);
